@@ -3,18 +3,23 @@
 ###Description
 C++ implementation of the [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 
+The implementation is inspired by : 
+
+- @lucarin91
+- @LapoFrati
+
 ##Usage
 <b>Usage:</B> ./game_of_life [options]
 
 | Option | Description |
 |:------:|:-----------:|
-| --width <u>NUM</u> | width of the matrix |
-| --height <u>NUM</u> | height of the matrix |
-| --input <u>FILE</u> | file where to retrieve the matrix |
-| --steps <u>NUM</u> | number of steps |
-| --thread <u>NUM</u> | number of threads |
+| --width __NUM__ | width of the matrix |
+| --height __NUM__ | height of the matrix |
+| --input __FILE__ | file where to retrieve the matrix |
+| --steps __NUM__| number of steps |
+| --thread __NUM__ | number of threads |
 | --graphic | activate the graphic mode |
-| --output <u>FILE</u> | file where to save the generated video |
+| --output __FILE__ | file where to save the generated video |
 | --help | shows this help view |
 
 
