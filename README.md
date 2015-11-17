@@ -5,14 +5,14 @@ C++ implementation of the [Conway's Game of Life](https://en.wikipedia.org/wiki/
 
 The implementation is inspired by : 
 
-- @lucarin91
-- @LapoFrati
+- [lucarin91](https://github.com/lucarin91)
+- [LapoFrati](https://github.com/LapoFrati)
 
 ##Usage
 <b>Usage:</B> ./game_of_life [options]
 
 | Option | Description |
-|:------:|:-----------:|
+|:------:|:-----------|
 | --width __NUM__ | width of the matrix |
 | --height __NUM__ | height of the matrix |
 | --input __FILE__ | file where to retrieve the matrix |
