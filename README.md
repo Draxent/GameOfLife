@@ -10,7 +10,9 @@ C++ implementation of the [Conway's Game of Life](https://en.wikipedia.org/wiki/
 	**Operating System** Red Hat Enterprise Linux Server release 6.5
 	**Compiler:**  Intel C++ Compiler, Version 15.0.2
 
-<img src="./xeon_machine.png" width="500">
+<div style="text-align:center">
+	<img src="./xeon_machine.png" width="500">
+</div>
 
 ###License
 Apache License
