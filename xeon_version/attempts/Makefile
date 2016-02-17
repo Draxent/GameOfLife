@@ -24,13 +24,23 @@ BOOST = false
 MIC = false
 DEBUG = false
 NAME = $@
+VECT = true
+INFO_VECT = false
+
+ifeq ($(VECT),true)
+	ifeq ($(INFO_VECT),true)
+		VECTORIZATION = -opt-report-phase:vec -opt-report-file=stderr -qopt-report=5
+	endif
+else
+	VECTORIZATION = -no-vec
+endif
 
 ifeq ($(BOOST),true)
 	BOOST_INCLUDE = -I $(BOOST_ROOT) -L $(BOOST_ROOT)/stage/lib
 endif
 
 ifeq ($(MIC),true)
-	XEONPHI = -mmic
+	XEONPHI = -mmic -DNO_DEFAULT_MAPPING
 endif
 
 ifeq ($(DEBUG),true)
@@ -39,7 +49,7 @@ else
         OPTFLAGS = -O3 -finline-functions -DNDEBUG
 endif
 
-CXX	= icpc $(XEONPHI) -std=c++11 -DNO_DEFAULT_MAPPING
+CXX	= icpc $(XEONPHI) -std=c++11 $(VECTORIZATION)
 LDFLAGS = -pthread
 
 .SUFFIXES: .cpp 

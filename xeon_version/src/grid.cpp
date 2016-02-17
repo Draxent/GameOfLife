@@ -20,9 +20,11 @@
  */
 
 
-#include <grid.hpp>
+#include "../include/grid.h"
 
-Grid::Grid( size_t height, size_t width, bool vectorization )
+#define RAND_MAX_HALF RAND_MAX/2
+
+Grid::Grid( int seed, size_t height, size_t width, bool vectorization )
 {
 	// Initialize private variables
 	this->rows = height + 2;
@@ -33,11 +35,11 @@ Grid::Grid( size_t height, size_t width, bool vectorization )
 
 	// Allocate the two Grides
 	this->allocate();
-	
+
 	if ( vectorization )
 	{
 		// Initialize random seed
-		srand48( time(NULL) );
+		srand48( ( seed == -1 ) ? time(NULL) : seed );
 
 		// Fill the Grid width random values
 		__assume_aligned( this->Read, 64 );
@@ -47,11 +49,12 @@ Grid::Grid( size_t height, size_t width, bool vectorization )
 	else
 	{
 		// Initialize random seed
-		srand ( time(NULL) );
-		
+		srand ( ( seed == -1 ) ? time(NULL) : seed );
+
+
 		// Fill the matrix width random values
 		for ( size_t i = 0; i < this->numCells; i++ )
-			this->Read[i] = ( rand() > 0.5 );
+			this->Read[i] = ( rand() > RAND_MAX_HALF );
 	}
 }
 
@@ -83,7 +86,7 @@ void Grid::copyBorder()
 	this->Read[0] = this->Read[numCells - this->cols - 2];
 
 	// Fill left & right borders
-	#pragma novector
+#pragma novector
 	for ( size_t i = 1; i <= this->rows - 2; i++ )
 	{
 		this->Read[i*this->cols] = this->Read[(i+1)*this->cols - 2];
@@ -100,7 +103,7 @@ void Grid::swap()
 
 void Grid::print( const char* msg, bool border )
 {
-	int add = border ? 0 : 1;
+	size_t add = border ? 0 : 1;
 	std::cout << msg << " Grid (rows: " << (border ? this->rows : (this->rows - 2)) << ", columns: " << (border ? this->cols : (this->cols - 2)) << ") :" << std::endl;
 	for ( size_t i = add; i < this->rows - add; i++ )
 	{
@@ -126,50 +129,6 @@ void Grid::allocate()
 	}
 }
 
-int Grid::countNeighbours( size_t pos ) const
-{
-	/*
-	return this->Read[ pos - this->cols - 1 ] + this->Read[ pos - this->cols ] + this->Read[ pos - this->cols + 1 ]
-			+ this->Read[ pos - 1 ] + this->Read[ pos + 1 ]
-			+ this->Read[ pos + this->cols - 1 ] + this->Read[ pos + this->cols ] + this->Read[ pos + this->cols + 1 ];
-	*/
-
-	int c = 0;
-
-	c += this->Read[ pos - this->cols - 1 ];
-	c += this->Read[ pos - this->cols ];
-	c += this->Read[ pos - this->cols + 1 ];
-
-	c += this->Read[ pos - 1 ];
-	c += this->Read[ pos + 1 ];
-
-	c += this->Read[ pos + this->cols - 1 ];
-	c += this->Read[ pos + this->cols ];
-	c += this->Read[ pos + this->cols + 1 ];
-
-	return c;
-}
-
-__declspec( vector( uniform(index), linear(offset:1) ) )
-int Grid::countNeighbours( size_t index, int offset ) const
-{
-	__assume_aligned( this->Read, 64 );
-	size_t pos = index + offset;
-	int c = 0;
-
-	c += this->Read[ pos - this->cols - 1 ];
-	c += this->Read[ pos - this->cols ];
-	c += this->Read[ pos - this->cols + 1 ];
-
-	c += this->Read[ pos - 1 ];
-	c += this->Read[ pos + 1 ];
-
-	c += this->Read[ pos + this->cols - 1 ];
-	c += this->Read[ pos + this->cols ];
-	c += this->Read[ pos + this->cols + 1 ];
-	
-	return c;
-}
 
 Grid::~Grid()
 {

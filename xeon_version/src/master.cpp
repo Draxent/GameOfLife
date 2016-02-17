@@ -20,9 +20,11 @@
  */
 
 
-#include <master.hpp>
+#include "../include/master.h"
 
-Master::Master( ff::ff_loadbalancer* const lb, int nw, Barrier* barrier, size_t steps ) : lb(lb), nw(nw), barrier(barrier), steps(steps) { }
+Master::Master( ff::ff_loadbalancer* const lb, int nw, Grid *g, size_t iterations )
+		: lb(lb), num_workers(nw), g(g), iterations(iterations), barrier_time(0),
+		  serial_time(0), completed_workers(0), completed_iterations(0) { }
 
 bool* Master::svc( bool* task )
 {
@@ -35,16 +37,46 @@ bool* Master::svc( bool* task )
 	}
 	else
 	{
-		barrier->apply();
-		
-		if ( barrier->is_reached() )
+		if ( this->completed_workers == 0 )
+			// Start - Barrier Phase.
+			this->t1 = std::chrono::high_resolution_clock::now();
+
+		// Increment the number of completed workers.
+		this->completed_workers++;
+
+		if ( this->completed_workers == this->num_workers )
 		{
+			// End - Barrier Phase
+			this->t2 = std::chrono::high_resolution_clock::now();
+			long time = std::chrono::duration_cast<std::chrono::microseconds>( this->t2 - this->t1 ).count();
+			this->barrier_time += time;
+
+			std::cout << "Barrier Time: " << time << std::endl;
+
+			// It is the last worker that finished the computation.
+			// Reset the number of completed workers.
+			this->completed_workers = 0;
+
+			// Increment the number of completed iterations.
+			this->completed_iterations++;
+
+			serial_time += serial_phase( g, this->completed_iterations );
+
 			// Complete the work broadcasting End-Of-Stream to all Workers or restart a new iteration.
-			if ( barrier->get_completed_steps() == this->steps )
+			if ( this->completed_iterations == this->iterations )
+			{
 				this->lb->broadcast_task( EOS );
+
+				// Print the total time in order to compute the serial phase.
+				printTime( serial_time, "serial phase" );
+
+				// Print the total time in order to compute the barrier phase.
+				printTime( barrier_time, "barrier phase" );
+			}
 			else
-				this->sendGO();			
+				this->sendGO();
 		}
+
 		return GO_ON;
 	}
 }
@@ -52,6 +84,6 @@ bool* Master::svc( bool* task )
 void Master::sendGO()
 {
 	// Send "GO" to all Workers
-	for ( int i = 0; i < this->nw; i++ )
+	for ( int i = 0; i < this->num_workers; i++ )
 		this->lb->ff_send_out_to( &(this->GO), i );
 }

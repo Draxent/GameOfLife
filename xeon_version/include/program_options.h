@@ -20,8 +20,8 @@
  */
 
 
-#ifndef INCLUDE_PROGRAM_OPTIONS_HPP_
-#define INCLUDE_PROGRAM_OPTIONS_HPP_
+#ifndef GAMEOFLIFE_PROGRAM_OPTIONS_H
+#define GAMEOFLIFE_PROGRAM_OPTIONS_H
 
 #include <iostream>
 #include <assert.h>
@@ -68,7 +68,7 @@ public:
 	 * @param default_value		value to return if the option value is <code>NULL</code>.
 	 * @return					the option integer value or the <em>default_value</em>.
 	 */
-	int get_int( const std::string& option, int default_value ) const;
+	size_t get_number( const std::string& option, size_t default_value ) const;
 
 	/**
 	 * Retrieve the integer value of one of the two options we want to retrieve.
@@ -76,11 +76,11 @@ public:
 	 * @param default_value		value to return if the option value is <code>NULL</code>.
 	 * @return					the option integer value or the <em>default_value</em>.
 	 */
-	int get_int( const std::string& option1, const std::string& option2, int default_value ) const;
+	size_t get_number( const std::string& option1, const std::string& option2, size_t default_value ) const;
 
 private:
 	int argc;
 	char** argv;
 };
 
-#endif /* INCLUDE_PROGRAM_OPTIONS_HPP_ */
+#endif //GAMEOFLIFE_PROGRAM_OPTIONS_H

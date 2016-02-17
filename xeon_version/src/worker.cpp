@@ -20,9 +20,10 @@
  */
 
 
-#include <worker.hpp>
+#include "../include/worker.h"
 
-Worker::Worker( Grid* g, size_t start, size_t end, bool vectorization ) : g(g), start(start), end(end), vectorization(vectorization)
+Worker::Worker( int id, Grid* g, size_t start, size_t end, bool vectorization )
+		: id(id), g(g), start(start), end(end), vectorization(vectorization)
 {
 	if ( vectorization )
 		this->numsNeighbors = (int*) _mm_malloc( VLEN * sizeof(int), 64 );
@@ -37,5 +38,5 @@ bool* Worker::svc( bool* task )
 Worker::~Worker()
 {
 	if ( this->vectorization )
-		_mm_free( this->numsNeighbors );		
+		_mm_free( this->numsNeighbors );
 }

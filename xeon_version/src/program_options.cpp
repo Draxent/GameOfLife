@@ -20,7 +20,7 @@
  */
 
 
-#include "program_options.hpp"
+#include "../include/program_options.h"
 
 ProgramOptions::ProgramOptions( int argc, char** argv )
 {
@@ -61,14 +61,14 @@ char* ProgramOptions::get( const std::string& option1, const std::string& option
 	return value;
 }
 
-int ProgramOptions::get_int( const std::string& option, int default_value ) const
+size_t ProgramOptions::get_number( const std::string& option, size_t default_value ) const
 {
 	char* s = this->get( option );
-	return ( ( s != NULL ) ? std::atoi(s) : default_value );
+	return ( ( s != NULL ) ? ((size_t) std::atol(s)) : default_value );
 }
 
-int ProgramOptions::get_int( const std::string& option1, const std::string& option2, int default_value ) const
+size_t ProgramOptions::get_number( const std::string& option1, const std::string& option2, size_t default_value ) const
 {
 	char* s = this->get( option1, option2 );
-	return ( ( s != NULL ) ? std::atoi(s) : default_value );
+	return ( ( s != NULL ) ? ((size_t) std::atol(s)) : default_value );
 }

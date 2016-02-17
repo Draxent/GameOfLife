@@ -1,5 +1,5 @@
 /**
- *	@file worker.hpp
+ *	@file worker.h
  *	@brief Header of \see Worker class.
  *	@author Federico Conte (draxent)
  *
@@ -19,12 +19,13 @@
  *	limitations under the License.
  */
 
-#ifndef INCLUDE_WORKER_HPP_
-#define INCLUDE_WORKER_HPP_
+#ifndef GAMEOFLIFE_WORKER_H
+#define GAMEOFLIFE_WORKER_H
 
+#include <chrono>
 #include <ff/farm.hpp>
-#include <grid.hpp>
-#include <functions.hpp>
+#include "grid.h"
+#include "functions.h"
 
 /// This Worker computes GOL generations until \see Master command.
 class Worker:public ff::ff_node_t<bool>
@@ -33,12 +34,13 @@ public:
 	/**
 	 * Initializes a new instance of the \see Worker class.
 	 * If vectorization is <code>true</code> we create an array to store the results of the number of Neighbour counting.
+	 * @param id			Worker identifier.
 	 * @param g				shared object of the \see Grid class
 	 * @param start			row index of the starting working area.
 	 * @param end			row index of the ending working area.
 	 * @param vectorization	<code>true</code> if the code has to be vectoriazed.
 	 */
-	Worker( Grid* g, size_t start, size_t end, bool vectorization );
+	Worker( int id, Grid* g, size_t start, size_t end, bool vectorization );
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
@@ -47,7 +49,7 @@ public:
 	 * @return		"DONE" message to the \see Master.
 	 */
 	bool* svc( bool* task );
-	
+
 	/**
 	 * Destructor of the \see Worker class.
 	 * If vectorization is <code>true</code>, we delete the additional array created during initialization.
@@ -57,10 +59,10 @@ public:
 private:
 	Grid* g;
 	const bool vectorization;
+	const int id;
 	const size_t start;
 	const size_t end;
 	int* numsNeighbors;
-	long time;
 };
 
-#endif /* INCLUDE_WORKER_HPP_ */
+#endif //GAMEOFLIFE_WORKER_H

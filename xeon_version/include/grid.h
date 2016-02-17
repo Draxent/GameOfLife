@@ -1,6 +1,6 @@
 /**
- *	@file matrix.hpp
- *	@brief Header of \see Matrix class.
+ *	@file grid.h
+ *	@brief Header of \see Grid class.
  *	@author Federico Conte (draxent)
  *
  *	Copyright 2015 Federico Conte
@@ -19,23 +19,23 @@
  *	limitations under the License.
  */
 
-
-#ifndef INCLUDE_GRID_HPP_
-#define INCLUDE_GRID_HPP_
+#ifndef GAMEOFLIFE_GRID_H
+#define GAMEOFLIFE_GRID_H
 
 #include <iostream>
 #include <assert.h>
+#include <mm_malloc.h>
 #include <fstream>
 #include <climits>
 #include <time.h>
 #include <new>
 
-// The vector processing unit (VPU) in Xeon Phi™ coprocessor provides data parallelism at a very fine grain, 
+// The vector processing unit (VPU) in Xeon Phi™ coprocessor provides data parallelism at a very fine grain,
 // working on 512 bits of 16 single-precision floats or 32-bit integers at a time.
 #if MIC
-	static const int VLEN = 32;
+static const int VLEN = 32;
 #else
-	static const int VLEN = 16;
+static const int VLEN = 16;
 #endif
 
 /// This class represent the grid of GOL (2D toroidal grid) and use internally two boolean array: one for reading one for writing.
@@ -52,11 +52,12 @@ public:
 	 * The size of the Grid is enlarged in order to have an additional border.
 	 * Set up this grid using random values.
 	 * Internally, it use two arrays: one for reading, one for writing.
+	 * @param seed				seed used to initialize the grid.
 	 * @param height			number of original grid rows.
 	 * @param width				number of original grid columns.
 	 * @param vectorization		if apply or not the vectorization during the init phase.
 	 */
-	Grid( size_t height, size_t width, bool vectorization );
+	Grid( int seed, size_t height, size_t width, bool vectorization );
 
 	/**
 	 * Return the actual grid width.
@@ -93,16 +94,22 @@ public:
 
 	/**
 	 * Count the number of neighbours (the 8 adjacent boxes) of a box grid set to <code>true</code>.
-	 * @param pos		identify the grid box in which compute this function.
-	 */
-	int countNeighbours( size_t pos ) const;
-	
-	/**
-	 * Count the number of neighbours (the 8 adjacent boxes) of a box grid set to <code>true</code>.
-	 * Vectorized version of \see countNeighbours function.
 	 * @param index, offset		their sum identify the grid box in which compute this function.
 	 */
-	int countNeighbours( size_t index, int offset ) const;
+	__declspec( vector( uniform(index), linear(offset:1) ) )
+	inline int countNeighbours( size_t index, int offset ) const
+	{
+		__assume_aligned( this->Read, 64 );
+		size_t pos = index + offset;
+		return  this->Read[ pos - this->cols - 1 ] +
+				this->Read[ pos - this->cols ] +
+				this->Read[ pos - this->cols + 1 ] +
+				this->Read[ pos - 1 ] +
+				this->Read[ pos + 1 ] +
+				this->Read[ pos + this->cols - 1 ] +
+				this->Read[ pos + this->cols ] +
+				this->Read[ pos + this->cols + 1 ];
+	}
 
 	/**
 	 * Print the boolean matrix on the standard output.
@@ -113,7 +120,7 @@ public:
 
 	/// Swap the reading and writing matrixes
 	void swap();
-	
+
 	/// Destructor of the \see Grid class.
 	~Grid();
 
@@ -124,4 +131,4 @@ private:
 	size_t rows, cols, numCells;
 };
 
-#endif /* INCLUDE_GRID_HPP_ */
+#endif //GAMEOFLIFE_GRID_H
