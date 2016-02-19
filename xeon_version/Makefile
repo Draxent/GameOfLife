@@ -7,7 +7,7 @@
 #	Licensed under the Apache License, Version 2.0 (the "License");
 #	you may not use this file except in compliance with the License.
 #	You may obtain a copy of the License at
-#	
+#
 #	http://www.apache.org/licenses/LICENSE-2.0
 #
 #	Unless required by applicable law or agreed to in writing, software
@@ -19,22 +19,8 @@
 
 # Control Variables
 MIC = false
-VECT = true
-INFO_VECT = false
 DEBUG = false
 MACHINE_TIME = false
-
-ifeq ($(MIC),true)
-	XEONPHI = -mmic -D MIC
-endif
-
-ifeq ($(VECT),true)
-	ifeq ($(INFO_VECT),true)
-		VECTORIZATION = -opt-report-phase:vec -opt-report-file=stderr -qopt-report=5
-	endif
-else
-	VECTORIZATION = -no-vec
-endif
 
 ifeq ($(DEBUG),true)
 	OPTFLAGS = -g -D DEBUG
@@ -44,43 +30,81 @@ else
 	endif
 	OPTFLAGS = -O3 -finline-functions -DNDEBUG -ipo $(MACHINE_FLAG)
 endif
-	
-# Project Name
-TARGET   	= game_of_life
+
+ifeq ($(MIC),true)
+	XEONPHI = -mmic -D MIC -DNO_DEFAULT_MAPPING
+endif
 
 # Compiler & Libs
-CXX		= icpc $(XEONPHI) -std=c++11 $(VECTORIZATION) -DNO_DEFAULT_MAPPING
+CXX 		= icpc -std=c++11 $(XEONPHI) $(OPTFLAGS)
 LDFLAGS 	= -pthread
-
 # Pointing to the FastFlow root directory (i.e. the one containing the ff directory).
 FF_ROOT 	= /home/spm1501/public/fastflow
 
-# Directories
-INCLUDE_DIR	= include
-SOURCE_DIR	= src
-BUILD_DIR	= build
+.PHONY: all clean clean_thread clean_ff cleanall
 
-# Files
-INCLUDES	= $(wildcard $(INCLUDE_DIR)/*.hpp)
-SOURCES		= $(wildcard $(SOURCE_DIR)/*.cpp)
-OBJECTS		= $(INCLUDES:$(INCLUDE_DIR)/%.hpp=$(BUILD_DIR)/%.o)
+all: build/GOL_thread build/GOL_ff
 
-.PHONY: all clean cleanall
-
-all: $(BUILD_DIR)/$(TARGET)
-
-$(BUILD_DIR)/$(TARGET): $(SOURCE_DIR)/main.cpp $(OBJECTS)
-	$(CXX) $(OPTFLAGS) -I $(INCLUDE_DIR) -I $(FF_ROOT) $(SOURCE_DIR)/main.cpp $(OBJECTS) -o $@ $(LDFLAGS)
+build/GOL_thread: src/main_thread.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o
+	$(CXX) src/main_thread.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
-$(OBJECTS): $(BUILD_DIR)/%.o : $(SOURCE_DIR)/%.cpp $(INCLUDE_DIR)/%.hpp
-	@$(CXX) $(OPTFLAGS) -I $(INCLUDE_DIR) -I $(FF_ROOT) -c $< -o $@
+build/GOL_ff: src/main_ff.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/worker_vect.o build/matrix.o
+	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/worker_vect.o build/matrix.o -o $@ $(LDFLAGS)
+	@echo "Compiled $@ successfully!"
+
+build/grid.o : src/grid.cpp include/grid.h
+	$(CXX) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
+build/grid_vect.o : src/grid_vect.cpp include/grid_vect.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/master.o : src/master.cpp include/master.h
+	$(CXX) -I $(FF_ROOT) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/matrix.o : src/matrix.cpp include/matrix.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/program_options.o : src/program_options.cpp include/program_options.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/shared_functions.o : src/shared_functions.cpp include/shared_functions.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/specialized_functions.o : src/specialized_functions.cpp include/specialized_functions.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/spinning_barrier.o : src/spinning_barrier.cpp include/spinning_barrier.h
+	$(CXX) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/worker.o : src/worker.cpp include/worker.h
+	$(CXX) -I $(FF_ROOT) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+build/worker_vect.o : src/worker_vect.cpp include/worker_vect.h
+	$(CXX) -I $(FF_ROOT) -c $< -o $@
+	@echo "Compiled $< successfully!"
+
+clean_thread:
+	rm -f build/GOL_thread
+	@echo "Cleanup build/GOL_thread completed!"
+
+clean_ff:
+	rm -f build/GOL_ff
+	@echo "Cleanup build/GOL_ff completed!"
+
 clean:
-	rm -f $(BUILD_DIR)/$(TARGET)
-	@echo "Cleanup complete!"
+	rm -f build/GOL_thread build/GOL_ff
+	@echo "Cleanup completed!"
 
 cleanall:
-	rm -f $(BUILD_DIR)/*~ $(BUILD_DIR)/*.o $(BUILD_DIR)/$(TARGET)
-	@echo "Cleanup complete!"
+	rm -f build/*~ build/*.o build/GOL_thread build/GOL_ff
+	@echo "Cleanup all completed!"

@@ -21,6 +21,7 @@
 
 # VARIABLES TO SET
 WORKING_DIR=~/Project
+MIC="mic1"
 
 # DERIVATE VARIABLES
 PERFORM_DIR=$WORKING_DIR/performance_comparison
@@ -28,22 +29,25 @@ BUILD_DIR=$WORKING_DIR/build
 
 DATE=$(date +%y-%m-%d)
 
-mkdir PERFORM_DIR/DATE
+mkdir $PERFORM_DIR/$DATE
 
 TIME=$(date +%s%N | cut -b1-13)
 
+# Compile
+$PERFORM_DIR/compile_app.sh
+
 # Low Level Threading Mechanisms
-$PERFORM_DIR/test_app.sh $TIME 5000 "false" "false" "DATE/perf_thread_25M.txt"
-$PERFORM_DIR/test_app.sh $TIME 10000 "false" "false" "DATE/perf_thread_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "false" "false" "$DATE/perf_thread_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "false" "false" "$DATE/perf_thread_100M.txt"
 
 # Low Level Threading Mechanisms + Vectorization
-$PERFORM_DIR/test_app.sh $TIME 5000 "true" "false" "DATE/perf_vect_thread_25M.txt"
-$PERFORM_DIR/test_app.sh $TIME 10000 "true" "false" "DATE/perf_vect_thread_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "true" "false" "$DATE/perf_vect_thread_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "true" "false" "$DATE/perf_vect_thread_100M.txt"
 
 # FastFlow framework
-$PERFORM_DIR/test_app.sh $TIME 5000 "false" "true" "DATE/perf_ff_25M.txt"
-$PERFORM_DIR/test_app.sh $TIME 10000 "false" "true" "DATE/perf_ff_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "false" "true" "$DATE/perf_ff_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "false" "true" "$DATE/perf_ff_100M.txt"
 
 # FastFlow framework + Vectorization
-$PERFORM_DIR/test_app.sh $TIME 5000 "true" "true" "DATE/perf_vect_ff_25M.txt"
-$PERFORM_DIR/test_app.sh $TIME 10000 "true" "true" "DATE/perf_vect_ff_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "true" "true" "$DATE/perf_vect_ff_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "true" "true" "$DATE/perf_vect_ff_100M.txt"

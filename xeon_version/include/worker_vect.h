@@ -1,6 +1,6 @@
 /**
- *	@file worker.h
- *	@brief Header of \see Worker class.
+ *	@file worker_vect.h
+ *	@brief Header of \see WorkerVect class.
  *	@author Federico Conte (draxent)
  *
  *	Copyright 2015 Federico Conte
@@ -19,39 +19,42 @@
  *	limitations under the License.
  */
 
-#ifndef GAMEOFLIFE_WORKER_H
-#define GAMEOFLIFE_WORKER_H
+#ifndef GAMEOFLIFE_WORKER_VECT_H
+#define GAMEOFLIFE_WORKER_VECT_H
 
-#include <chrono>
-#include <ff/farm.hpp>
-#include "grid.h"
-#include "specialized_functions.h"
+#include "worker.h"
 
-/// This Worker computes GOL generations until \see Master command.
-class Worker : public ff::ff_node_t<bool>
+// Vectorized version of \see Worker class.
+class WorkerVect : public Worker
 {
 public:
 	/**
-	 * Initializes a new instance of the \see Worker class.
+	 * Initializes a new instance of the \see WorkerVect class.
+	 * We create an array to store the results of the number of Neighbour counting.
 	 * @param id			Worker identifier.
-	 * @param g				shared object of the \see Grid class
+	 * @param g				shared object of the \see GridVect class
 	 * @param start			row index of the starting working area.
 	 * @param end			row index of the ending working area.
 	 */
-	Worker( int id, Grid* g, size_t start, size_t end);
+	WorkerVect( int id, GridVect* g, size_t start, size_t end );
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
-	 * Call \see compute_generation function, i.e. it responds to the Master request computing a new generation on its portion of the \see Grid.
+	 * Call \see compute_generation function, i.e. it responds to the Master
+	 * request computing a new generation on its portion of the \see Grid.
 	 * @param task	"GO" message received from the \see Master.
 	 * @return		"DONE" message to the \see Master.
 	 */
 	bool* svc( bool* task );
 
-protected:
-	int id;
-	Grid* g;
-	size_t start, end;
+	/**
+	 * Destructor of the \see WorkerVect class.
+	 * Delete the additional array created during initialization.
+	 */
+	~WorkerVect();
+
+private:
+	int* numsNeighbors;
 };
 
-#endif //GAMEOFLIFE_WORKER_H
+#endif //GAMEOFLIFE_WORKER_VECT_H

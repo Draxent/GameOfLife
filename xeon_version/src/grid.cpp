@@ -22,9 +22,7 @@
 
 #include "../include/grid.h"
 
-#define RAND_MAX_HALF RAND_MAX/2
-
-Grid::Grid( int seed, size_t height, size_t width, bool vectorization )
+Grid::Grid( size_t height, size_t width )
 {
 	// Initialize private variables
 	this->rows = height + 2;
@@ -35,27 +33,16 @@ Grid::Grid( int seed, size_t height, size_t width, bool vectorization )
 
 	// Allocate the two Grides
 	this->allocate();
+}
 
-	if ( vectorization )
-	{
-		// Initialize random seed
-		srand48( ( seed == -1 ) ? time(NULL) : seed );
+void Grid::init( unsigned int seed )
+{
+	// Initialize random seed
+	srand((seed == 0) ? time(NULL) : seed);
 
-		// Fill the Grid width random values
-		__assume_aligned( this->Read, 64 );
-		for ( size_t i = 0; i < this->numCells; i += VLEN )
-			this->Read[i:VLEN] = ( drand48() > 0.5 );
-	}
-	else
-	{
-		// Initialize random seed
-		srand ( ( seed == -1 ) ? time(NULL) : seed );
-
-
-		// Fill the matrix width random values
-		for ( size_t i = 0; i < this->numCells; i++ )
-			this->Read[i] = ( rand() > RAND_MAX_HALF );
-	}
+	// Fill the matrix width random values
+	for (size_t i = 0; i < this->numCells; i++)
+		this->Read[i] = (rand() > RAND_MAX_HALF);
 }
 
 size_t Grid::width() const
@@ -86,7 +73,6 @@ void Grid::copyBorder()
 	this->Read[0] = this->Read[numCells - this->cols - 2];
 
 	// Fill left & right borders
-#pragma novector
 	for ( size_t i = 1; i <= this->rows - 2; i++ )
 	{
 		this->Read[i*this->cols] = this->Read[(i+1)*this->cols - 2];
@@ -119,8 +105,8 @@ void Grid::allocate()
 {
 	try
 	{
-		this->Read = (bool*) _mm_malloc( numCells * sizeof(bool), 64 );
-		this->Write = (bool*) _mm_malloc( numCells * sizeof(bool), 64 );
+		this->Read = new bool[numCells];
+		this->Write = new bool[numCells];
 	}
 	catch( std::bad_alloc& badAlloc )
 	{
@@ -129,9 +115,8 @@ void Grid::allocate()
 	}
 }
 
-
 Grid::~Grid()
 {
-	_mm_free( this->Read );
-	_mm_free( this->Write );
+	delete[] this->Read;
+	delete[] this->Write;
 }

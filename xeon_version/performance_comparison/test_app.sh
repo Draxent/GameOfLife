@@ -25,41 +25,28 @@ NUMBER='^[0-9]+$'
 # VARIABLES TO SET
 WORKING_DIR=~/Project
 ITERATIONS=100
-TARGET="game_of_life"
-NUM_VALUES=3
-
-MIC="mic1"
+NUM_VALUES=5
 
 # DERIVATE VARIABLES
 PERFORM_DIR=$WORKING_DIR/performance_comparison
 BUILD_DIR=$WORKING_DIR/build
 
-if [ $# -lt 5 ]; then
-	echo "Usage: $0 seed side vect ff output"
+if [ $# -lt 6 ]; then
+	echo "Usage: $0 mic seed side vect ff output"
 	exit 1
 fi
 
-SEED=$1
-SIDE=$2
-VECTORIZATION=$3
-FASTFLOW_VERSION=$4
-OUTPUT_FILE=$5
+MIC=$1
+SEED=$2
+SIDE=$3
+VECTORIZATION=$4
+FASTFLOW_VERSION=$5
+OUTPUT_FILE=$6
 
 echo "TEST: SEED: $SEED, SIDE: $SIDE, VECT: $VECTORIZATION, FF:$FASTFLOW_VERSION, OUTPUT_FILE:$OUTPUT_FILE."
 
-cd $WORKING_DIR
-make cleanall
-
-# one copy on XEON PHI
-make MIC="true" MACHINE_TIME="true"
-scp $BUILD_DIR/$TARGET $MIC:
-
-# one copy on XEON HOST
-make cleanall
-make MACHINE_TIME="true"
-
 if [ "$VECTORIZATION" = "true" ]; then VECT="-v"; fi
-if [ "$FASTFLOW_VERSION" = "true" ]; then FF="-ff"; fi
+if [ "$FASTFLOW_VERSION" = "true" ]; then TARGET="GOL_ff"; else TARGET="GOL_thread"; fi
 
 ###################################
 # perfomance program on XEON HOST #
@@ -75,7 +62,7 @@ do
 
     for j in $(seq 1 $NUM_VALUES)
     do
-        output=$($BUILD_DIR/$TARGET $VECT $FF -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
+        output=$($BUILD_DIR/$TARGET $VECT -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
 
         init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
         if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError init! \033[0m"; exit 1; fi
@@ -135,7 +122,7 @@ do
 
 	for j in $(seq 1 $NUM_VALUES)
 	do
-		output=$(ssh $MIC ./$TARGET $VECT $FF -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
+		output=$(ssh $MIC ./$TARGET $VECT -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
 
 		init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
 		if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError XEON PHI init! \033[0m"; exit 1; fi

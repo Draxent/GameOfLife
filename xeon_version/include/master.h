@@ -25,7 +25,7 @@
 #include <chrono>
 
 #include "ff/farm.hpp"
-#include "functions.h"
+#include "shared_functions.h"
 
 /// The Master coordinates the work of the \see Worker and performs the barrier on them at the end of each GOL iteration.
 class Master:public ff::ff_node_t<bool>

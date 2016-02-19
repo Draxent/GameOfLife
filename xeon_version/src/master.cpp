@@ -48,10 +48,7 @@ bool* Master::svc( bool* task )
 		{
 			// End - Barrier Phase
 			this->t2 = std::chrono::high_resolution_clock::now();
-			long time = std::chrono::duration_cast<std::chrono::microseconds>( this->t2 - this->t1 ).count();
-			this->barrier_time += time;
-
-			std::cout << "Barrier Time: " << time << std::endl;
+			this->barrier_time += std::chrono::duration_cast<std::chrono::microseconds>( this->t2 - this->t1 ).count();
 
 			// It is the last worker that finished the computation.
 			// Reset the number of completed workers.

@@ -1,6 +1,6 @@
 /**
- *	@file worker.cpp
- *	@brief Implementation of \see Worker class.
+ *	@file worker_vect.cpp
+ *	@brief Implementation of \see WorkerVect class.
  *	@author Federico Conte (draxent)
  *
  *	Copyright 2015 Federico Conte
@@ -20,18 +20,20 @@
  */
 
 
-#include "../include/worker.h"
+#include "../include/worker_vect.h"
 
-Worker::Worker( int id, Grid* g, size_t start, size_t end )
-		: id(id), g(g), start(start), end(end)
+WorkerVect::WorkerVect( int id, GridVect* g, size_t start, size_t end ) : Worker( id, g, start, end )
 {
-#if DEBUG
-	std::cout << "Worker " << id << " got range [" << start << "," << end << ")" << std::endl;
-#endif // DEBUG
+	this->numsNeighbors = new int[VLEN];
 }
 
-bool* Worker::svc( bool* task )
+bool* WorkerVect::svc( bool* task )
 {
-	compute_generation( this->g, this->start, this->end );
+	compute_generation_vect( (GridVect*) this->g, this->numsNeighbors, this->start, this->end );
 	return task;
+}
+
+WorkerVect::~WorkerVect()
+{
+	delete[] this->numsNeighbors;
 }

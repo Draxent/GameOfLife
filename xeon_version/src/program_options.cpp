@@ -61,13 +61,13 @@ char* ProgramOptions::get( const std::string& option1, const std::string& option
 	return value;
 }
 
-size_t ProgramOptions::get_number( const std::string& option, size_t default_value ) const
+long ProgramOptions::get_number( const std::string& option, long default_value ) const
 {
 	char* s = this->get( option );
 	return ( ( s != NULL ) ? ((size_t) std::atol(s)) : default_value );
 }
 
-size_t ProgramOptions::get_number( const std::string& option1, const std::string& option2, size_t default_value ) const
+long ProgramOptions::get_number( const std::string& option1, const std::string& option2, long default_value ) const
 {
 	char* s = this->get( option1, option2 );
 	return ( ( s != NULL ) ? ((size_t) std::atol(s)) : default_value );

@@ -51,7 +51,7 @@ public:
 	long get_time();
 
 private:
-	// Number of synchronized threads.
+	// Number of threads to synchronize.
 	const unsigned int nw;
 	// Number of threads currently spinning.
 	std::atomic<unsigned int> num_waiting;

@@ -1,7 +1,7 @@
 /**
- *	@file worker.cpp
- *	@brief Implementation of \see Worker class.
- *	@author Federico Conte (draxent)
+ *	@file grid_vect.cpp
+ *  @brief Implementation of \see Grid class.
+ *  @author Federico Conte (draxent)
  *
  *	Copyright 2015 Federico Conte
  *	https://github.com/Draxent/GameOfLife
@@ -19,19 +19,16 @@
  *	limitations under the License.
  */
 
+#include "../include/grid_vect.h"
 
-#include "../include/worker.h"
+GridVect::GridVect( size_t height, size_t width ) : Grid( height, width ) { }
 
-Worker::Worker( int id, Grid* g, size_t start, size_t end )
-		: id(id), g(g), start(start), end(end)
+void GridVect::init( unsigned int seed )
 {
-#if DEBUG
-	std::cout << "Worker " << id << " got range [" << start << "," << end << ")" << std::endl;
-#endif // DEBUG
-}
+	// Initialize random seed
+	srand48( ( seed == 0 ) ? time(NULL) : seed );
 
-bool* Worker::svc( bool* task )
-{
-	compute_generation( this->g, this->start, this->end );
-	return task;
+	// Fill the Grid width random values
+	for ( size_t i = 0; i < this->numCells; i += VLEN )
+		this->Read[i:VLEN] = ( drand48() > 0.5 );
 }

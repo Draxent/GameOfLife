@@ -24,9 +24,6 @@
 
 #include <iostream>
 #include <assert.h>
-#include <mm_malloc.h>
-#include <fstream>
-#include <climits>
 #include <time.h>
 #include <new>
 
@@ -37,6 +34,8 @@ static const int VLEN = 32;
 #else
 static const int VLEN = 16;
 #endif
+
+#define RAND_MAX_HALF RAND_MAX/2
 
 /// This class represent the grid of GOL (2D toroidal grid) and use internally two boolean array: one for reading one for writing.
 class Grid
@@ -50,14 +49,17 @@ public:
 	/**
 	 * Initializes a new instance of the \see Grid class.
 	 * The size of the Grid is enlarged in order to have an additional border.
-	 * Set up this grid using random values.
 	 * Internally, it use two arrays: one for reading, one for writing.
-	 * @param seed				seed used to initialize the grid.
 	 * @param height			number of original grid rows.
 	 * @param width				number of original grid columns.
-	 * @param vectorization		if apply or not the vectorization during the init phase.
 	 */
-	Grid( int seed, size_t height, size_t width, bool vectorization );
+	Grid( size_t height, size_t width );
+
+	/**
+	 * Set up this grid using random values.
+	 * @param seed				seed used to initialize the grid.
+	 */
+	void init( unsigned int seed );
 
 	/**
 	 * Return the actual grid width.
@@ -94,21 +96,20 @@ public:
 
 	/**
 	 * Count the number of neighbours (the 8 adjacent boxes) of a box grid set to <code>true</code>.
-	 * @param index, offset		their sum identify the grid box in which compute this function.
+	 * @param pos			identify the grid box in which compute this function.
+	 * @param pos_top		identify the top box.
+	 * @param pos_bottom	identify the bottom box.
 	 */
-	__declspec( vector( uniform(index), linear(offset:1) ) )
-	inline int countNeighbours( size_t index, int offset ) const
+	inline int countNeighbours( size_t pos, size_t pos_top, size_t pos_bottom ) const
 	{
-		__assume_aligned( this->Read, 64 );
-		size_t pos = index + offset;
-		return  this->Read[ pos - this->cols - 1 ] +
-				this->Read[ pos - this->cols ] +
-				this->Read[ pos - this->cols + 1 ] +
+		return  this->Read[ pos_top - 1 ] +
+				this->Read[ pos_top ] +
+				this->Read[ pos_top + 1 ] +
 				this->Read[ pos - 1 ] +
 				this->Read[ pos + 1 ] +
-				this->Read[ pos + this->cols - 1 ] +
-				this->Read[ pos + this->cols ] +
-				this->Read[ pos + this->cols + 1 ];
+				this->Read[ pos_bottom - 1 ] +
+				this->Read[ pos_bottom ] +
+				this->Read[ pos_bottom + 1 ];
 	}
 
 	/**
@@ -124,7 +125,7 @@ public:
 	/// Destructor of the \see Grid class.
 	~Grid();
 
-private:
+protected:
 	// Allocate space in the heap for the reading and writing boolean arrays.
 	void allocate();
 

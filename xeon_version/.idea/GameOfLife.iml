@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main_thread.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/matrix.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main_ff.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spinning_barrier.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/worker.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/worker_vect.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/shared_functions.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/grid.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/master.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/specialized_functions.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/grid_vect.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/program_options.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/worker.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/worker_vect.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/spinning_barrier.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/matrix.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/grid.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/specialized_functions.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/program_options.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/grid_vect.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/master.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/shared_functions.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Header Search Paths">
+        <CLASSES>
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include" />
+          <root url="file:///usr/include" />
+          <root url="file:///usr/local/include" />
+          <root url="file://$USER_HOME$/fastflow" />
+        </CLASSES>
+        <SOURCES>
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+          <root url="file:///usr/lib/gcc/x86_64-linux-gnu/5/include" />
+          <root url="file:///usr/include" />
+          <root url="file:///usr/local/include" />
+          <root url="file://$USER_HOME$/fastflow" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>
