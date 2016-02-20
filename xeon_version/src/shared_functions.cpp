@@ -132,6 +132,7 @@ bool initialization( bool vectorization, size_t width, size_t height, unsigned i
 
 	// Create and initialize the Grid object.
 	g = new Grid( height, width );
+	g->init( seed );
 	if ( vectorization ) g->init_vect( seed );
 	else g->init( seed );
 	// Configure the border to properly respect the logic of the 2D toroidal grid
@@ -160,7 +161,6 @@ bool initialization( bool vectorization, size_t width, size_t height, unsigned i
 	size_t workingSize = g->size() - 2*g->width();
 	// It is better that chunk is a multiple of VLEN in order to favor vectorization.
 	chunk = (vectorization) ? ( roundMultiple(workingSize / nw, VLEN) ) :  ( workingSize / nw );
-	chunk = ( chunk < VLEN ) ? VLEN : chunk;
 	long r = workingSize - chunk*nw;
 	rest = ( r > 0 ) ? r : 0;
 	end = g->size() - g->width() - 1;

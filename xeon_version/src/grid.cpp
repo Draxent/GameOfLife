@@ -51,8 +51,12 @@ void Grid::init_vect( unsigned int seed )
 	srand48( ( seed == 0 ) ? time(NULL) : seed );
 
 	// Fill the Grid width random values
-	for ( size_t i = 0; i < this->numCells; i += VLEN )
+	size_t i = 0;
+	for ( ; i + VLEN < this->numCells; i += VLEN )
 		this->Read[i:VLEN] = ( drand48() > 0.5 );
+	// Fill normally the last piece that does not fill a vector register.
+	for ( ; i < this->numCells; i++)
+		this->Read[i] = ( drand48() > 0.5 );
 }
 
 
