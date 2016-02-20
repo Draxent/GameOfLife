@@ -45,19 +45,15 @@ FF_ROOT 	= /home/spm1501/public/fastflow
 
 all: build/GOL_thread build/GOL_ff
 
-build/GOL_thread: src/main_thread.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o
-	$(CXX) src/main_thread.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o -o $@ $(LDFLAGS)
+build/GOL_thread: src/main_thread.cpp build/grid.o  build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o
+	$(CXX) src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
-build/GOL_ff: src/main_ff.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/worker_vect.o build/matrix.o
-	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/grid_vect.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/worker_vect.o build/matrix.o -o $@ $(LDFLAGS)
+build/GOL_ff: src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/matrix.o
+	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/matrix.o -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
 build/grid.o : src/grid.cpp include/grid.h
-	$(CXX) -c $< -o $@
-	@echo "Compiled $< successfully!"
-
-build/grid_vect.o : src/grid_vect.cpp include/grid_vect.h
 	$(CXX) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
@@ -86,10 +82,6 @@ build/spinning_barrier.o : src/spinning_barrier.cpp include/spinning_barrier.h
 	@echo "Compiled $< successfully!"
 
 build/worker.o : src/worker.cpp include/worker.h
-	$(CXX) -I $(FF_ROOT) -c $< -o $@
-	@echo "Compiled $< successfully!"
-
-build/worker_vect.o : src/worker_vect.cpp include/worker_vect.h
 	$(CXX) -I $(FF_ROOT) -c $< -o $@
 	@echo "Compiled $< successfully!"
 

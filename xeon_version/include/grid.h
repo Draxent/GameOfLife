@@ -62,6 +62,13 @@ public:
 	void init( unsigned int seed );
 
 	/**
+	 * Set up this grid using random values.
+	 * Vectorization version of \see init function.
+	 * @param seed				seed used to initialize the grid.
+	 */
+	void init_vect( unsigned int seed );
+
+	/**
 	 * Return the actual grid width.
 	 * @return	the actual grid width.
 	 */
@@ -102,6 +109,27 @@ public:
 	 */
 	inline int countNeighbours( size_t pos, size_t pos_top, size_t pos_bottom ) const
 	{
+		return  this->Read[ pos_top - 1 ] +
+				this->Read[ pos_top ] +
+				this->Read[ pos_top + 1 ] +
+				this->Read[ pos - 1 ] +
+				this->Read[ pos + 1 ] +
+				this->Read[ pos_bottom - 1 ] +
+				this->Read[ pos_bottom ] +
+				this->Read[ pos_bottom + 1 ];
+	}
+
+	/**
+	 * Count the number of neighbours (the 8 adjacent boxes) of a box grid set to <code>true</code>.
+	 * Vectorization version of \see countNeighbours function.
+	 * @param index, offset			their sum identify the grid box in which compute this function.
+	 * @param index_top, offset		their sum identify the top box.
+	 * @param index_bottom, offset	their sum identify the bottom box.
+	 */
+	__declspec( vector( uniform(index, index_top, index_bottom), linear(offset:1) ) )
+	inline int countNeighbours( size_t index, size_t index_top, size_t index_bottom, int offset ) const
+	{
+		size_t pos = index + offset, pos_top = index_top + offset, pos_bottom = index_bottom + offset;
 		return  this->Read[ pos_top - 1 ] +
 				this->Read[ pos_top ] +
 				this->Read[ pos_top + 1 ] +

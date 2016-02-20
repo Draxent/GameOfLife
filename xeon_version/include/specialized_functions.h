@@ -34,7 +34,6 @@
 #include "program_options.h"
 #include "shared_functions.h"
 #include "grid.h"
-#include "grid_vect.h"
 #include "spinning_barrier.h"
 
 /**
@@ -64,7 +63,7 @@ void compute_generation( Grid* g, size_t start, size_t end );
  * @param start				row index of starting working area.
  * @param end				row index of ending working area.
  */
-void compute_generation_vect( GridVect* g, int* numsNeighbours, size_t start, size_t end );
+void compute_generation_vect( Grid* g, int* numsNeighbours, size_t start, size_t end );
 
 /**
  * Function computed by threads.
@@ -77,21 +76,10 @@ void compute_generation_vect( GridVect* g, int* numsNeighbours, size_t start, si
  * @param start				row index of starting working area.
  * @param end				row index of ending working area.
  * @param iterations		number of iterations.
- * @param serial_time		address to the variable counting the time to compute the serial phase.
+ * @param vectorization		<code>true</code> if the function has to be parallelize.
+ * @param copyborder_time	address to the variable counting the time to compute the end_generation functions.
  * @param barrier			shared object of \see SpinningBarrier class.
  */
-void thread_body( int id, Grid* g, size_t start, size_t end, unsigned int iterations, long* serial_time, SpinningBarrier* barrier = NULL);
-
-/**
- * Vectorized version of \see thread_body.
- * @param id				thread identifier
- * @param g					shared object of \see Grid class.
- * @param start				row index of starting working area.
- * @param end				row index of ending working area.
- * @param iterations		number of iterations.
- * @param serial_time		address to the variable counting the time to compute the serial phase.
- * @param barrier			shared object of \see SpinningBarrier class.
- */
-void thread_body_vect( int id, GridVect* g, size_t start, size_t end, unsigned int iterations, long* serial_time, SpinningBarrier* barrier = NULL);
+void thread_body( int id, Grid* g, size_t start, size_t end, unsigned int iterations, bool vectorization, long* copyborder_time, SpinningBarrier* barrier = NULL);
 
 #endif //GAMEOFLIFE_FUNCTIONS_H

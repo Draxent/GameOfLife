@@ -39,10 +39,10 @@ void compute_generation( Grid* g, size_t start, size_t end )
 	}
 }
 
-void compute_generation_vect( GridVect* g, int* numsNeighbours, size_t start, size_t end )
+void compute_generation_vect( Grid* g, int* numsNeighbours, size_t start, size_t end )
 {
-	size_t index, index_top = start - g->width(), index_bottom = start + g->width();
-	for ( index = start; index + VLEN < end; index += VLEN, index_top += VLEN, index_bottom += VLEN )
+	size_t index = start, index_top = start - g->width(), index_bottom = start + g->width();
+	for ( ; index + VLEN < end; index += VLEN, index_top += VLEN, index_bottom += VLEN )
 	{
 		// Save the computation of the neighbours counting into the numsNeighbours array.
 		numsNeighbours[0:VLEN] = g->countNeighbours( index, index_top, index_bottom, __sec_implicit_index(0) );
@@ -53,13 +53,13 @@ void compute_generation_vect( GridVect* g, int* numsNeighbours, size_t start, si
 	for ( ; index < end; index++, index_top++, index_bottom++ )
 	{
 		// Calculate #Neighbours.
-		int numNeighbor = g->countNeighbours( index, index_top, index_bottom, 0 );
+		int numNeighbor = g->countNeighbours( index, index_top, index_bottom );
 		// Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 )).
 		g->Write[index] = ( numNeighbor == 3 || ( g->Read[index] && numNeighbor == 2 ) );
 	}
 }
 
-void thread_body( int id, Grid* g, size_t start, size_t end, unsigned int iterations, long* serial_time, SpinningBarrier* barrier )
+void thread_body( int id, Grid* g, size_t start, size_t end, unsigned int iterations, bool vectorization, long* copyborder_time, SpinningBarrier* barrier )
 {
 #if DEBUG
 	mtx.lock();
@@ -67,38 +67,26 @@ void thread_body( int id, Grid* g, size_t start, size_t end, unsigned int iterat
 	fflush( stdout );
 	mtx.unlock();
 #endif // DEBUG
+	int* numsNeighbours = NULL;
+	if ( vectorization )
+		numsNeighbours = new int[VLEN];
 
 	for ( unsigned int k = 1; k <= iterations; k++ )
 	{
-		compute_generation( g, start, end );
-		// if we are computing the sequential or it is the last thread we compute the serial phase
+		// The working size has to be significant in order to vectorized the thread_body function.
+		if ( vectorization && ( end - start >= VLEN ) )
+			compute_generation_vect( g, numsNeighbours, start, end );
+		else
+			compute_generation( g, start, end );
+
+		// if we are computing the sequential or it is the last thread we compute the end_generation function.
 		if ( barrier == NULL || barrier->is_last_thread() )
 		{
-			*serial_time = *serial_time + serial_phase( g, k );
+			*copyborder_time = *copyborder_time + end_generation( g, k );
 			if ( barrier != NULL) barrier->notify_all();
 		}
 	}
-}
 
-void thread_body_vect( int id, GridVect* g, size_t start, size_t end, unsigned int iterations, long* serial_time, SpinningBarrier* barrier )
-{
-#if DEBUG
-	mtx.lock();
-	std::cout << "Thread " << id << " got range [" << start << "," << end << ")" << std::endl;
-	fflush( stdout );
-	mtx.unlock();
-#endif // DEBUG
-
-	int* numsNeighbours = new int[VLEN];
-	for ( unsigned int k = 1; k <= iterations; k++ )
-	{
-		compute_generation_vect( g, numsNeighbours, start, end );
-		// if we are computing the sequential or it is the last thread we compute the serial phase
-		if ( barrier == NULL || barrier->is_last_thread() )
-		{
-			*serial_time = *serial_time + serial_phase( g, k );
-			if ( barrier != NULL) barrier->notify_all();
-		}
-	}
-	delete[] numsNeighbours;
+	if ( vectorization )
+		delete[] numsNeighbours;
 }

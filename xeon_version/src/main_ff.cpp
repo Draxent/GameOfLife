@@ -28,7 +28,6 @@
 #include "../include/shared_functions.h"
 #include "../include/master.h"
 #include "../include/worker.h"
-#include "../include/worker_vect.h"
 #if DEBUG
 #include "../include/matrix.h"
 #endif // DEBUG
@@ -66,11 +65,7 @@ int main( int argc, char** argv )
 		start = stop;
 		stop  = start + chunk + ((rest-- > 0) ? 1 : 0);
 		stop = ( stop > end ) ? end : stop;
-		// The working size has to be significant in order to vectorized the thread_body function.
-		if ( vectorization && ( stop - start >= VLEN ) )
-			workers.push_back( ff::make_unique<WorkerVect>( t, (GridVect*) g, start, stop ) );
-		else
-			workers.push_back( ff::make_unique<Worker>( t, g, start, stop ) );
+		workers.push_back( ff::make_unique<Worker>( t, g, start, stop, vectorization ) );
 	}
 	// Update the number of workers actually started.
 	nw = t;
@@ -117,6 +112,5 @@ int main( int argc, char** argv )
 	// End - Game of Life
 	t2 = std::chrono::high_resolution_clock::now();
 	printTime( t1, t2, "complete Game of Life" );
-
 	return 0;
 }

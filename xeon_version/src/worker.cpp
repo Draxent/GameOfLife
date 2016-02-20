@@ -22,16 +22,28 @@
 
 #include "../include/worker.h"
 
-Worker::Worker( int id, Grid* g, size_t start, size_t end )
-		: id(id), g(g), start(start), end(end)
+Worker::Worker( int id, Grid* g, size_t start, size_t end, bool vectorization )
+		: id(id), g(g), start(start), end(end), vectorization(vectorization)
 {
 #if DEBUG
 	std::cout << "Worker " << id << " got range [" << start << "," << end << ")" << std::endl;
 #endif // DEBUG
+	if ( this->vectorization )
+		this->numsNeighbors = new int[VLEN];
 }
 
 bool* Worker::svc( bool* task )
 {
-	compute_generation( this->g, this->start, this->end );
+	// The working size has to be significant in order to vectorized the thread_body function.
+	if ( this->vectorization && ( this->end - this->start >= VLEN ) )
+		compute_generation_vect( this->g, this->numsNeighbors, this->start, this->end );
+	else
+		compute_generation( this->g, this->start, this->end );
 	return task;
+}
+
+Worker::~Worker()
+{
+	if ( this->vectorization )
+		delete[] this->numsNeighbors;
 }

@@ -45,7 +45,7 @@ public:
 	 * The pseudo-code of the method is the following:
 	 * 		1. Send "GO" to all Workers.
 	 * 		2. Wait "DONE" from all Workers.
-	 * 		3. Execute the serial phase on the Grid: swap, copyBorder, print.
+	 * 		3. Execute the end_generation function on the Grid: swap, copyBorder, print.
 	 * 		4. IF ( the number of completed iterations is equal to <em>iterations</em> ). // End of GOL
 	 * 			4.1 Send "End-Of-Stream" to all Workers.
 	 * 		4. Else
@@ -61,7 +61,7 @@ private:
 	Grid* g;
 	ff::ff_loadbalancer* const lb;
 	const size_t iterations;
-	long barrier_time, serial_time;
+	long barrier_time, copyborder_time;
 	unsigned int completed_workers, completed_iterations;
 	std::chrono::high_resolution_clock::time_point t1, t2;
 	bool GO = true;

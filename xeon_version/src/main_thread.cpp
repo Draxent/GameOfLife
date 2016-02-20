@@ -25,7 +25,6 @@
 #include <thread>
 
 #include "../include/grid.h"
-#include "../include/grid_vect.h"
 #include "../include/shared_functions.h"
 #if DEBUG
 #include "../include/matrix.h"
@@ -59,7 +58,7 @@ int main( int argc, char** argv )
 	size_t* stops = new size_t[nw + 1];
 	starts[0] = 0;
 	stops[0] = g->width() + 1;
-	long serial_time = 0;
+	long copyborder_time = 0;
 
 	// Calculate real number of threads and the working chunk of each thread.
 	int n;
@@ -77,13 +76,7 @@ int main( int argc, char** argv )
 	// Create and start the workers.
 	std::vector<std::thread> tid;
 	for( int t = 0; t < nw; t++ )
-	{
-		// The working size has to be significant in order to vectorized the thread_body function.
-		if ( vectorization && ( stops[t + 1] - starts[t + 1] >= VLEN ) )
-			tid.push_back( std::thread( thread_body_vect, t, (GridVect*) g, starts[t + 1], stops[t + 1], iterations, &serial_time, barrier ) );
-		else
-			tid.push_back( std::thread( thread_body, t, g, starts[t + 1], stops[t + 1], iterations, &serial_time, barrier ) );
-	}
+		tid.push_back( std::thread( thread_body, t, g, starts[t + 1], stops[t + 1], iterations, vectorization, &copyborder_time, barrier ) );
 
 	// End - Creating Threads.
 	t2 = std::chrono::high_resolution_clock::now();
@@ -93,8 +86,8 @@ int main( int argc, char** argv )
 	for ( int t = 0; t < nw; t++ )
 		tid[t].join();
 
-	// Print the total time in order to compute the serial phase.
-	printTime( serial_time, "serial phase" );
+	// Print the total time in order to compute the end_generation functions.
+	printTime( copyborder_time, "copy border" );
 
 	// Print the total time in order to compute the barrier phase.
 	printTime( barrier->get_time(), "barrier phase" );
@@ -121,6 +114,5 @@ int main( int argc, char** argv )
 		return 1;
 	}
 #endif // DEBUG
-
 	return 0;
 }

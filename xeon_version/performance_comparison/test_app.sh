@@ -25,7 +25,7 @@ NUMBER='^[0-9]+$'
 # VARIABLES TO SET
 WORKING_DIR=~/Project
 ITERATIONS=100
-NUM_VALUES=5
+NUM_VALUES=3
 
 # DERIVATE VARIABLES
 PERFORM_DIR=$WORKING_DIR/performance_comparison
@@ -51,8 +51,8 @@ if [ "$FASTFLOW_VERSION" = "true" ]; then TARGET="GOL_ff"; else TARGET="GOL_thre
 ###################################
 # perfomance program on XEON HOST #
 ###################################
-echo -e "NUM_THREADS\tXEON HOST" > $PERFORM_DIR/$OUTPUT_FILE
-echo -e "\tINIT PHASE\tSERIAL PHASE\tCREATING THREADS\tBARRIER PHASE\tCOMPLETE GOL" >> $PERFORM_DIR/$OUTPUT_FILE
+echo -e "XEON HOST" > $PERFORM_DIR/$OUTPUT_FILE
+echo -e "NUM THREADS\tINIT PHASE\tCOPY BORDER\tCREATING THREADS\tBARRIER PHASE\tCOMPLETE GOL" >> $PERFORM_DIR/$OUTPUT_FILE
 
 echo -n "XEON HOST Computed: "
 
@@ -67,8 +67,8 @@ do
         init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
         if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError init! \033[0m"; exit 1; fi
 
-        serial[$j]=$(echo $output | sed 's/T/\nT/g' | grep "serial phase" | tr -dc '0-9')
-        if ! [[ ${serial[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError serial! \033[0m"; exit 1; fi
+        copyborder[$j]=$(echo $output | sed 's/T/\nT/g' | grep "copy border" | tr -dc '0-9')
+        if ! [[ ${copyborder[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError copyborder! \033[0m"; exit 1; fi
 
         if [ $numthreads -gt 0 ]; then
             thread[$j]=$(echo $output | sed 's/T/\nT/g' | grep "creating threads" | tr -dc '0-9')
@@ -84,8 +84,8 @@ do
 
     init=$($PERFORM_DIR/avg_time.sh ${init[@]})
     if [ $? != 0 ]; then echo -e "\033[1;31mError init avg_time.sh! \033[0m"; exit 1; fi
-    serial=$($PERFORM_DIR/avg_time.sh ${serial[@]})
-    if [ $? != 0 ]; then echo -e "\033[1;31mError serial avg_time.sh! \033[0m"; exit 1; fi
+    copyborder=$($PERFORM_DIR/avg_time.sh ${copyborder[@]})
+    if [ $? != 0 ]; then echo -e "\033[1;31mError copyborder avg_time.sh! \033[0m"; exit 1; fi
     if [ $numthreads -gt 0 ]; then
         thread=$($PERFORM_DIR/avg_time.sh ${thread[@]})
         if [ $? != 0 ]; then echo -e "\033[1;31mError thread avg_time.sh! \033[0m"; exit 1; fi
@@ -99,7 +99,7 @@ do
     if [ $? != 0 ]; then echo -e "\033[1;31mError GOL avg_time.sh! \033[0m"; exit 1; fi
 
 	# print performances
-	echo -e "\t$init\t$serial\t$thread\t$barrier\t$gol" >> $PERFORM_DIR/$OUTPUT_FILE
+	echo -e "\t$init\t$copyborder\t$thread\t$barrier\t$gol" >> $PERFORM_DIR/$OUTPUT_FILE
 
 	# print computed input
 	echo -n "$numthreads, "
@@ -110,8 +110,8 @@ echo -e "\033[1;92mDone !\033[0m"
 ###################################
 # perfomance program on XEON PHI #
 ###################################
-echo -e "NUM_THREADS\tXEON PHI" >> $PERFORM_DIR/$OUTPUT_FILE
-echo -e "\tINIT PHASE\tSERIAL PHASE\tCREATING THREADS\tBARRIER PHASE\tCOMPLETE GOL" >> $PERFORM_DIR/$OUTPUT_FILE
+echo -e "\nXEON PHI" >> $PERFORM_DIR/$OUTPUT_FILE
+echo -e "NUM THREADS\tINIT PHASE\tCOPY BORDER\tCREATING THREADS\tBARRIER PHASE\tCOMPLETE GOL" >> $PERFORM_DIR/$OUTPUT_FILE
 
 echo -n "XEON PHI Computed: "
 
@@ -127,8 +127,8 @@ do
 		init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
 		if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError XEON PHI init! \033[0m"; exit 1; fi
 
-		serial[$j]=$(echo $output | sed 's/T/\nT/g' | grep "serial phase" | tr -dc '0-9')
-		if ! [[ ${serial[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError XEON PHI serial! \033[0m"; exit 1; fi
+		copyborder[$j]=$(echo $output | sed 's/T/\nT/g' | grep "copy border" | tr -dc '0-9')
+		if ! [[ ${copyborder[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError XEON PHI copyborder! \033[0m"; exit 1; fi
 
 		if [ $numthreads -gt 0 ]; then
 			thread[$j]=$(echo $output | sed 's/T/\nT/g' | grep "creating threads" | tr -dc '0-9')
@@ -143,8 +143,8 @@ do
 
 	init=$($PERFORM_DIR/avg_time.sh ${init[@]})
 	if [ $? != 0 ]; then echo -e "\033[1;31mError XEON PHI init avg_time.sh! \033[0m"; exit 1; fi
-	serial=$($PERFORM_DIR/avg_time.sh ${serial[@]})
-	if [ $? != 0 ]; then echo -e "\033[1;31mError XEON PHI serial avg_time.sh! \033[0m"; exit 1; fi
+	copyborder=$($PERFORM_DIR/avg_time.sh ${copyborder[@]})
+	if [ $? != 0 ]; then echo -e "\033[1;31mError XEON PHI copyborder avg_time.sh! \033[0m"; exit 1; fi
 	if [ $numthreads -gt 0 ]; then
 		thread=$($PERFORM_DIR/avg_time.sh ${thread[@]})
 		if [ $? != 0 ]; then echo -e "\033[1;31mError XEON PHI thread avg_time.sh! \033[0m"; exit 1; fi
@@ -158,7 +158,7 @@ do
 	if [ $? != 0 ]; then echo -e "\033[1;31mError XEON PHI GOL avg_time.sh! \033[0m"; exit 1; fi
 
 	# print performances
-	echo -e "\t$init\t$serial\t$thread\t$barrier\t$gol" >> $PERFORM_DIR/$OUTPUT_FILE
+	echo -e "\t$init\t$copyborder\t$thread\t$barrier\t$gol" >> $PERFORM_DIR/$OUTPUT_FILE
 
 	# print computed input
 	echo -n "$numthreads, "

@@ -45,6 +45,17 @@ void Grid::init( unsigned int seed )
 		this->Read[i] = (rand() > RAND_MAX_HALF);
 }
 
+void Grid::init_vect( unsigned int seed )
+{
+	// Initialize random seed
+	srand48( ( seed == 0 ) ? time(NULL) : seed );
+
+	// Fill the Grid width random values
+	for ( size_t i = 0; i < this->numCells; i += VLEN )
+		this->Read[i:VLEN] = ( drand48() > 0.5 );
+}
+
+
 size_t Grid::width() const
 {
 	return this->cols;

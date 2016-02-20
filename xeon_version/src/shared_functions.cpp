@@ -33,17 +33,11 @@ bool sequential_version( Grid* g, unsigned int iterations, bool vectorization )
 	// Start - Game of Life
 	t1 = std::chrono::high_resolution_clock::now();
 
-	long serial_time = 0;
+	long copyborder_time = 0;
+	thread_body( 0, g, g->width() + 1, g->size() - g->width() - 1, iterations, vectorization, &copyborder_time );
 
-	// The working size has to be significant in order to vectorized the thread_body function.
-	std::cout << "VAL: " << ( g->size() - 2*g->width() - 2 ) << std::endl;
-	if ( vectorization && ( g->size() - 2*g->width() - 2 >= VLEN ) )
-		thread_body_vect( 0, (GridVect*) g, g->width() + 1, g->size() - g->width() - 1, iterations, &serial_time );
-	else
-		thread_body( 0, g, g->width() + 1, g->size() - g->width() - 1, iterations, &serial_time );
-
-	// Print the total time in order to compute the serial phase.
-	printTime( serial_time, "serial phase" );
+	// Print the total time in order to compute  the end_generation functions.
+	printTime( copyborder_time, "copy border" );
 
 #if DEBUG
 	// Print only small Grid
@@ -69,11 +63,11 @@ bool sequential_version( Grid* g, unsigned int iterations, bool vectorization )
 	return true;
 }
 
-long serial_phase( Grid* g, unsigned int current_iteration )
+long end_generation( Grid* g, unsigned int current_iteration )
 {
 	std::chrono::high_resolution_clock::time_point t1, t2;
 
-	// Start - Serial Phase
+	// Start - End Generation
 	t1 = std::chrono::high_resolution_clock::now();
 
 	// Swap the reading and writing matrixes.
@@ -81,7 +75,6 @@ long serial_phase( Grid* g, unsigned int current_iteration )
 
 	// Every step we need to configure the border to properly respect the logic of the 2D toroidal grid
 	g->copyBorder();
-
 
 #if DEBUG
 	// Print only small Grid
@@ -93,7 +86,7 @@ long serial_phase( Grid* g, unsigned int current_iteration )
 	}
 #endif // DEBUG
 
-	// End - Serial Phase
+	// End - End Generation
 	t2 = std::chrono::high_resolution_clock::now();
 	return std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 }
@@ -138,9 +131,9 @@ bool initialization( bool vectorization, size_t width, size_t height, unsigned i
 	t1 = std::chrono::high_resolution_clock::now();
 
 	// Create and initialize the Grid object.
-	if ( vectorization ) g = new Grid( height, width );
-	else g = new GridVect( height, width );
-	g->init( seed );
+	g = new Grid( height, width );
+	if ( vectorization ) g->init_vect( seed );
+	else g->init( seed );
 	// Configure the border to properly respect the logic of the 2D toroidal grid
 	g->copyBorder();
 
@@ -175,6 +168,7 @@ bool initialization( bool vectorization, size_t width, size_t height, unsigned i
 #if DEBUG
 	std::cout << "WorkingSize: " << workingSize << ", Chunk: " << chunk << ", Rest: " << rest << "." << std::endl;
 #endif // DEBUG
+
 	return true;
 }
 

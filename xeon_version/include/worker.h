@@ -33,12 +33,15 @@ class Worker : public ff::ff_node_t<bool>
 public:
 	/**
 	 * Initializes a new instance of the \see Worker class.
+	 * If vectorization is <code>true</code>, we create an array
+	 * to store the results of the number of Neighbour counting.
 	 * @param id			Worker identifier.
 	 * @param g				shared object of the \see Grid class
 	 * @param start			row index of the starting working area.
 	 * @param end			row index of the ending working area.
+	 * @param vectorization	<code>true</code> if we want to execute the vectorized version.
 	 */
-	Worker( int id, Grid* g, size_t start, size_t end);
+	Worker( int id, Grid* g, size_t start, size_t end, bool vectorization);
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
@@ -48,10 +51,18 @@ public:
 	 */
 	bool* svc( bool* task );
 
+	/**
+	 * Destructor of the \see Worker class.
+	 * If vectorization is <code>true</code>, we delete the additional array created during initialization.
+	 */
+	~Worker();
+
 protected:
 	int id;
+	bool vectorization;
 	Grid* g;
 	size_t start, end;
+	int* numsNeighbors;
 };
 
 #endif //GAMEOFLIFE_WORKER_H

@@ -24,7 +24,7 @@
 
 Master::Master( ff::ff_loadbalancer* const lb, int nw, Grid *g, size_t iterations )
 		: lb(lb), num_workers(nw), g(g), iterations(iterations), barrier_time(0),
-		  serial_time(0), completed_workers(0), completed_iterations(0) { }
+		  copyborder_time(0), completed_workers(0), completed_iterations(0) { }
 
 bool* Master::svc( bool* task )
 {
@@ -57,15 +57,15 @@ bool* Master::svc( bool* task )
 			// Increment the number of completed iterations.
 			this->completed_iterations++;
 
-			serial_time += serial_phase( g, this->completed_iterations );
+			copyborder_time += end_generation( g, this->completed_iterations );
 
 			// Complete the work broadcasting End-Of-Stream to all Workers or restart a new iteration.
 			if ( this->completed_iterations == this->iterations )
 			{
 				this->lb->broadcast_task( EOS );
 
-				// Print the total time in order to compute the serial phase.
-				printTime( serial_time, "serial phase" );
+				// Print the total time in order to compute the end_generation functions.
+				printTime( copyborder_time, "copy border" );
 
 				// Print the total time in order to compute the barrier phase.
 				printTime( barrier_time, "barrier phase" );

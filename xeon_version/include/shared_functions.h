@@ -29,7 +29,6 @@
 
 #include "program_options.h"
 #include "grid.h"
-#include "grid_vect.h"
 #include "specialized_functions.h"
 #if DEBUG
 #include "matrix.h"
@@ -48,14 +47,14 @@ bool sequential_version( Grid* g, unsigned int iterations, bool vectorization );
 
 /**
  * It is the phase that we decided to not parallelize.
- * This includes: swap(), copyBorder(), print().
+ * This includes: swap(), copyBorder() and print().
  * So this phase is executed by the last thread that reached the barrier
  * at the end of the computation of a generation.
  * @param g						the \see Grid object.
  * @param current_iteration		current GOL iteration, needed during DEBUG.
  * @return	time needed to compute it, in microseconds.
  */
-long serial_phase( Grid* g, unsigned int current_iteration );
+long end_generation( Grid* g, unsigned int current_iteration );
 
 /**
  * Shows the program options if flag "--help" is present and
