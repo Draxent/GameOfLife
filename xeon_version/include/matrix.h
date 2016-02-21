@@ -80,10 +80,10 @@ public:
 	void set( size_t i, size_t j, bool value );
 
 	/**
-	 * Count the number of neighbors (the 8 adjacent cells) of a cell matrix set to <code>true</code>.
+	 * Count the number of neighbours (the 8 adjacent cells) of a cell matrix set to <code>true</code>.
 	 * @param i, j		indexes that identify the cell matrix in which compute this function.
 	 */
-	int countNeighbors( size_t i, size_t j ) const;
+	int countNeighbours( size_t i, size_t j ) const;
 
 	/// Print the boolean matrix on the standard output.
 	void print();

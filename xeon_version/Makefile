@@ -45,12 +45,12 @@ FF_ROOT 	= /home/spm1501/public/fastflow
 
 all: build/GOL_thread build/GOL_ff
 
-build/GOL_thread: src/main_thread.cpp build/grid.o  build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o
-	$(CXX) src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/matrix.o -o $@ $(LDFLAGS)
+build/GOL_thread: src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/matrix.o
+	$(CXX) src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/matrix.o -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
-build/GOL_ff: src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/matrix.o
-	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/specialized_functions.o build/spinning_barrier.o build/master.o build/worker.o build/matrix.o -o $@ $(LDFLAGS)
+build/GOL_ff: src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/master.o build/worker.o build/matrix.o
+	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/master.o build/worker.o build/matrix.o include/task.h -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
 build/grid.o : src/grid.cpp include/grid.h
@@ -70,14 +70,6 @@ build/program_options.o : src/program_options.cpp include/program_options.h
 	@echo "Compiled $< successfully!"
 
 build/shared_functions.o : src/shared_functions.cpp include/shared_functions.h
-	$(CXX) -c $< -o $@
-	@echo "Compiled $< successfully!"
-
-build/specialized_functions.o : src/specialized_functions.cpp include/specialized_functions.h
-	$(CXX) -c $< -o $@
-	@echo "Compiled $< successfully!"
-
-build/spinning_barrier.o : src/spinning_barrier.cpp include/spinning_barrier.h
 	$(CXX) -c $< -o $@
 	@echo "Compiled $< successfully!"
 

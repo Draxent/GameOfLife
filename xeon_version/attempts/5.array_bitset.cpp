@@ -46,7 +46,7 @@ void copyBorder()
 	}
 }
 
-int countNeighbors( size_t index, int offset )
+int countNeighbours( size_t index, int offset )
 {
 	int c = 0;
 	
@@ -187,8 +187,8 @@ int main( int argc, char* argv[] )
 		{		
 			for ( int offset = 0; offset < BITSET_SIZE; offset++ )
 			{
-				int numNeighbors = countNeighbors( index, offset );
-				MWRITE[index][offset] = ( numNeighbors == 3 || ( MREAD[index][offset] && numNeighbors == 2 ) );
+				int numNeighbours = countNeighbours( index, offset );
+				MWRITE[index][offset] = ( numNeighbours == 3 || ( MREAD[index][offset] && numNeighbours == 2 ) );
 			}
 		}
 		

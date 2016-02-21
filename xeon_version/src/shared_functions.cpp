@@ -21,6 +21,39 @@
 
 #include "../include/shared_functions.h"
 
+void compute_generation( Grid* g, size_t start, size_t end )
+{
+	size_t pos_top = start - g->width(), pos_bottom = start + g->width();
+
+	for ( size_t pos = start; pos < end; pos++, pos_top++, pos_bottom++ )
+	{
+		// Calculate #Neighbours.
+		int numNeighbor = g->countNeighbours( pos, pos_top, pos_bottom );
+		// Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 )).
+		g->Write[pos] = ( numNeighbor == 3 || ( g->Read[pos] && numNeighbor == 2 ) );
+	}
+}
+
+void compute_generation_vect( Grid* g, int* numNeighbours, size_t start, size_t end )
+{
+	size_t index = start, index_top = start - g->width(), index_bottom = start + g->width();
+	for ( ; index + VLEN < end; index += VLEN, index_top += VLEN, index_bottom += VLEN )
+	{
+		// Save the computation of the neighbours counting into the numNeighbours array.
+		numNeighbours[0:VLEN] = g->countNeighbours( index, index_top, index_bottom, __sec_implicit_index(0) );
+		// Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 )) in vector notations.
+		g->Write[index:VLEN] = ( numNeighbours[0:VLEN] == 3 || ( g->Read[index:VLEN] && numNeighbours[0:VLEN] == 2 ) );
+	}
+	// Compute normally the last piece that does not fill the numNeighbours array.
+	for ( ; index < end; index++, index_top++, index_bottom++ )
+	{
+		// Calculate #Neighbours.
+		int numNeighbor = g->countNeighbours( index, index_top, index_bottom );
+		// Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 )).
+		g->Write[index] = ( numNeighbor == 3 || ( g->Read[index] && numNeighbor == 2 ) );
+	}
+}
+
 bool sequential_version( Grid* g, unsigned int iterations, bool vectorization )
 {
 	std::chrono::high_resolution_clock::time_point t1, t2;
@@ -34,10 +67,30 @@ bool sequential_version( Grid* g, unsigned int iterations, bool vectorization )
 	t1 = std::chrono::high_resolution_clock::now();
 
 	long copyborder_time = 0;
-	thread_body( 0, g, g->width() + 1, g->size() - g->width() - 1, iterations, vectorization, &copyborder_time );
+	size_t start = g->width() + 1, end = g->size() - g->width() - 1;
+	int* numNeighbours = NULL;
+	if ( vectorization )
+		numNeighbours = new int[VLEN];
+
+	for ( unsigned int k = 1; k <= iterations; k++ )
+	{
+		if ( vectorization )
+			compute_generation_vect( g, numNeighbours, start, end );
+		else
+			compute_generation( g, start, end );
+
+		copyborder_time = copyborder_time + end_generation( g, k );
+	}
+
+	if ( vectorization )
+		delete[] numNeighbours;
 
 	// Print the total time in order to compute  the end_generation functions.
 	printTime( copyborder_time, "copy border" );
+
+	// End - Game of Life
+	t2 = std::chrono::high_resolution_clock::now();
+	printTime( t1, t2, "complete Game of Life" );
 
 #if DEBUG
 	// Print only small Grid
@@ -57,9 +110,6 @@ bool sequential_version( Grid* g, unsigned int iterations, bool vectorization )
 	}
 #endif // DEBUG
 
-	// End - Game of Life
-	t2 = std::chrono::high_resolution_clock::now();
-	printTime( t1, t2, "complete Game of Life" );
 	return true;
 }
 
@@ -91,7 +141,7 @@ long end_generation( Grid* g, unsigned int current_iteration )
 	return std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 }
 
-bool menu( int argc, char** argv, bool& vectorization, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw )
+bool menu( int argc, char** argv, bool& vectorization, size_t& grain, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw )
 {
 	ProgramOptions po( argc, argv );
 
@@ -101,6 +151,7 @@ bool menu( int argc, char** argv, bool& vectorization, size_t& width, size_t& he
 		std::cerr << "Usage: " << argv[0] << " [options] " << std::endl;
 		std::cerr << "Possible options:" << std::endl;
 		std::cerr << "\t -v,\t --vect \t activate the vectorization version ;" << std::endl;
+		std::cerr << "\t -g NUM, --grain NUM \t  chunk size assigned to threads ( zero for static scheduling ) ;" << std::endl;
 		std::cerr << "\t -w NUM, --width NUM \t grid width ;" << std::endl;
 		std::cerr << "\t -h NUM, --height NUM \t grid height ;" << std::endl;
 		std::cerr << "\t -s NUM, --seed NUM \t seed used to initialize the grid ( zero for timestamp seed ) ;" << std::endl;
@@ -112,19 +163,20 @@ bool menu( int argc, char** argv, bool& vectorization, size_t& width, size_t& he
 
 	// Retrieve all the options value
 	vectorization = po.exists( "-v", "--vect" );
+	grain = (size_t) po.get_number( "-g", "--grain", 0 );
 	width = (size_t) po.get_number( "-w", "--width", 1000 );
 	height = (size_t) po.get_number( "-h", "--height", 1000 );
 	seed = (unsigned int) po.get_number( "-s", "--seed", 0 );
 	iterations = (unsigned int) po.get_number( "-i", "--iterations", 100 );
 	nw = (unsigned int) po.get_number( "-t", "--thread", 0 );
-	assert ( nw >= 0 && width > 0 && height > 0 && iterations > 0 );
+	assert ( nw >= 0 && grain >= 0 && width > 0 && height > 0 && iterations > 0 );
 	std::cout << "Vectorization: " << ( vectorization ? "true" : "false" ) << ", ";
-	std::cout << "Width: " << width << ", Height: " << height << ", Seed: " << seed;
+	std::cout << "Grain: " << grain << ", Width: " << width << ", Height: " << height << ", Seed: " << seed;
 	std::cout << ", Iterations: " << iterations << ", NumWorker: " << nw << "." << std::endl;
 	return true;
 }
 
-bool initialization( bool vectorization, size_t width, size_t height, unsigned int seed, unsigned int iterations, unsigned int nw, Grid*& g, size_t& chunk, size_t& rest, size_t& end )
+void initialization( bool vectorization, size_t width, size_t height, unsigned int seed, Grid*& g )
 {
 	std::chrono::high_resolution_clock::time_point t1, t2;
 	// Start - Initialization Phase
@@ -152,30 +204,6 @@ bool initialization( bool vectorization, size_t width, size_t height, unsigned i
 	// End - Initialization Phase
 	t2 = std::chrono::high_resolution_clock::now();
 	printTime( t1, t2, "initialization phase" );
-
-	// Sequential version
-	if ( nw == 0 )
-		return sequential_version( g, iterations, vectorization );
-
-	// Set up some variables useful for the threads work
-	size_t workingSize = g->size() - 2*g->width();
-	// It is better that chunk is a multiple of VLEN in order to favor vectorization.
-	chunk = (vectorization) ? ( roundMultiple(workingSize / nw, VLEN) ) :  ( workingSize / nw );
-	long r = workingSize - chunk*nw;
-	rest = ( r > 0 ) ? r : 0;
-	end = g->size() - g->width() - 1;
-
-#if DEBUG
-	std::cout << "WorkingSize: " << workingSize << ", Chunk: " << chunk << ", Rest: " << rest << "." << std::endl;
-#endif // DEBUG
-
-	return true;
-}
-
-int roundMultiple( int numToRound, int mul )
-{
-	assert ( mul != 0 );
-	return ((numToRound + mul - 1) / mul) * mul;
 }
 
 void printTime( long duration, const char *msg )

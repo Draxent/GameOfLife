@@ -88,7 +88,7 @@ public:
 
 	/**
 	 * Let assume that we have a Grid of 3x3.
-	 * We enlarge the matrix with a border in order to favor locality in the countNeighbors computation.
+	 * We enlarge the matrix with a border in order to favor locality in the countNeighbours computation.
 	 * So we end up having a Grid of 5x5 as in the example below:
 	 *  _ _ _ _ _
 	 * |_|_|_|_|_|

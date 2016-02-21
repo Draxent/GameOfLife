@@ -22,65 +22,95 @@
 
 #include "../include/master.h"
 
-Master::Master( ff::ff_loadbalancer* const lb, int nw, Grid *g, size_t iterations )
-		: lb(lb), num_workers(nw), g(g), iterations(iterations), barrier_time(0),
-		  copyborder_time(0), completed_workers(0), completed_iterations(0) { }
+Master::Master( ff::ff_loadbalancer* const lb, Grid* g, unsigned int iterations, size_t start, size_t end, size_t chunk_size, unsigned long num_tasks )
+			: lb(lb), g(g), iterations(iterations), start(start), end(end),
+			  chunk_size(chunk_size), num_tasks(num_tasks)
+{
+	this->completed_iterations = 0;
+	this->start_chunk = 0;
+	this->end_chunk = start;
+	this->counter = 0;
+	this->copyborder_time = 0;
+	this->barrier_time = 0;
+	this->first_worker = -1;
+}
 
-bool* Master::svc( bool* task )
+Task_t* Master::svc( Task_t* task )
 {
 	if ( task == nullptr )
 	{
-		// Initially the Master send "GO" to all the Workers.
-		this->sendGO();
+		// First iteration
+		send_work();
 		// Keep it alive.
 		return GO_ON;
 	}
 	else
 	{
-		if ( this->completed_workers == 0 )
-			// Start - Barrier Phase.
-			this->t1 = std::chrono::high_resolution_clock::now();
+		// We start calculating the barrier time when the first worker finish all its jobs.
+		// This measure is not precise, but it is the best we though about.
+		if ( this->counter == 0 || lb->get_channel_id() == this->first_worker )
+		{
+			this->first_worker = lb->get_channel_id();
+			// Start - Barrier Phase
+			t1 = std::chrono::high_resolution_clock::now();
+		}
 
-		// Increment the number of completed workers.
-		this->completed_workers++;
+		// Increment Task counter and delete Task.
+		this->counter++;
+		delete( task );
 
-		if ( this->completed_workers == this->num_workers )
+		// If the Task counter is equal to the number of task sent, we complete the iteration.
+		if ( this->counter == this->num_tasks )
 		{
 			// End - Barrier Phase
-			this->t2 = std::chrono::high_resolution_clock::now();
-			this->barrier_time += std::chrono::duration_cast<std::chrono::microseconds>( this->t2 - this->t1 ).count();
+			t2 = std::chrono::high_resolution_clock::now();
+			barrier_time += std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 
-			// It is the last worker that finished the computation.
-			// Reset the number of completed workers.
-			this->completed_workers = 0;
+			// Reset counter.
+			this->counter = 0;
 
 			// Increment the number of completed iterations.
 			this->completed_iterations++;
 
 			copyborder_time += end_generation( g, this->completed_iterations );
 
-			// Complete the work broadcasting End-Of-Stream to all Workers or restart a new iteration.
+			// Send EOS if we completed all the iterations.
 			if ( this->completed_iterations == this->iterations )
 			{
-				this->lb->broadcast_task( EOS );
-
 				// Print the total time in order to compute the end_generation functions.
 				printTime( copyborder_time, "copy border" );
 
 				// Print the total time in order to compute the barrier phase.
 				printTime( barrier_time, "barrier phase" );
-			}
-			else
-				this->sendGO();
-		}
 
-		return GO_ON;
+				return EOS;
+			}
+			else // We go on with the computation of the next generation.
+			{
+				// Next iteration
+				this->send_work();
+				// Keep it alive.
+				return GO_ON;
+			}
+		}
+		else // Keep it alive.
+			return GO_ON;
 	}
 }
 
-void Master::sendGO()
+void Master::send_work()
 {
-	// Send "GO" to all Workers
-	for ( int i = 0; i < this->num_workers; i++ )
-		this->lb->ff_send_out_to( &(this->GO), i );
+	this->start_chunk = 0;
+	this->end_chunk = start;
+	// Until it does not complete scattering the Grid.
+	while ( this->end_chunk < this->end )
+	{
+		// Create new Task.
+		this->start_chunk = this->end_chunk;
+		this->end_chunk = std::min( this->start_chunk + this->chunk_size, this->end );
+		Task_t *task = new Task_t( this->start_chunk, this->end_chunk );
+
+		// Send Task to the next Worker.
+		ff_send_out( task );
+	}
 }

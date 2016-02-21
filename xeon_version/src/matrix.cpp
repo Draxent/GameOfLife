@@ -72,7 +72,7 @@ void Matrix::set( size_t i, size_t j, bool value )
 	this->write[i][j] = value;
 }
 
-int Matrix::countNeighbors( size_t i, size_t j ) const
+int Matrix::countNeighbours( size_t i, size_t j ) const
 {
 	int c = 0;
 	c += this->read[(i + this->rows - 1) % this->rows][(j + this->cols - 1) % this->cols];
@@ -128,7 +128,7 @@ void Matrix::GOL( unsigned int iterations )
 			for ( size_t j = 0; j < this->cols; j++ )
 			{
 				// Calculate #Neighbours.
-				int numNeighbor = this->countNeighbors( i, j );
+				int numNeighbor = this->countNeighbours( i, j );
 
 				// Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 )).
 				this->set( i, j, numNeighbor == 3 || ( this->get( i, j )&& numNeighbor == 2 ) );

@@ -25,46 +25,54 @@
 #include <chrono>
 
 #include "ff/farm.hpp"
+#include "task.h"
 #include "shared_functions.h"
 
 /// The Master coordinates the work of the \see Worker and performs the barrier on them at the end of each GOL iteration.
-class Master:public ff::ff_node_t<bool>
+class Master:public ff::ff_node_t<Task_t>
 {
 public:
 	/**
 	 * Initializes a new instance of \see Master class.
 	 * @param lb			load balancer used by Master.
-	 * @param nw			number of Workers that Master will manage.
 	 * @param g				the \see Grid object.
 	 * @param iterations	number of GOL iterations to execute.
+	 * @param start, end	start and end indexing to the Grid working area.
+	 * @param chunk_size	chunk size to assign to Workers.
+	 * @param num_tasks		number of task that it will generate for each generation.
 	 */
-	Master( ff::ff_loadbalancer* const lb, int nw, Grid* g, size_t iterations );
+	Master( ff::ff_loadbalancer* const lb, Grid* g, unsigned int iterations, size_t start, size_t end, size_t chunk_size, unsigned long num_tasks );
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
 	 * The pseudo-code of the method is the following:
-	 * 		1. Send "GO" to all Workers.
+	 * 		1. Distribute all task, necessary to compute a generation, to all Workers.
 	 * 		2. Wait "DONE" from all Workers.
 	 * 		3. Execute the end_generation function on the Grid: swap, copyBorder, print.
 	 * 		4. IF ( the number of completed iterations is equal to <em>iterations</em> ). // End of GOL
 	 * 			4.1 Send "End-Of-Stream" to all Workers.
 	 * 		4. Else
 	 * 			4.2 Start from point 1.
-	 * @param task	"DONE" message or <code>NULL</code>.
-	 * @return	the received task.
+	 * @param task	the task that has been computed or <code>NULL</code>.
+	 * @return	the task to compute.
 	 */
-	bool* svc( bool* task );
+	Task_t* svc( Task_t* task );
 
 private:
-	void sendGO();
-	const int num_workers;
+	// Distribute all task, necessary to compute a generation, to all Workers.
+	void send_work();
+
 	Grid* g;
 	ff::ff_loadbalancer* const lb;
-	const size_t iterations;
-	long barrier_time, copyborder_time;
-	unsigned int completed_workers, completed_iterations;
+	const unsigned int iterations;
+	const size_t start, end, chunk_size;
+	const unsigned long num_tasks;
+	size_t start_chunk, end_chunk;
+	unsigned long counter;
+	unsigned int completed_iterations;
+	long copyborder_time, barrier_time;
+	int first_worker;
 	std::chrono::high_resolution_clock::time_point t1, t2;
-	bool GO = true;
 };
 
 #endif //GAMEOFLIFE_MASTER_H

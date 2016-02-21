@@ -35,7 +35,7 @@ void copyBorder( bool shifted )
 	}
 }
 
-int countNeighbors( int pos )
+int countNeighbours( int pos )
 {
 	int c = 0;
 	
@@ -130,16 +130,16 @@ int main( int argc, char* argv[] )
 		{
 			for ( size_t pos = numCells - 2*(side + 1); pos > side + 1; pos-- )
 			{
-				int numNeighbors = countNeighbors( pos );
-				M[pos + side + 1] = ( numNeighbors == 3 || ( M[pos] && numNeighbors == 2 ) );
+				int numNeighbours = countNeighbours( pos );
+				M[pos + side + 1] = ( numNeighbours == 3 || ( M[pos] && numNeighbours == 2 ) );
 			}
 		}
 		else
 		{
 			for ( size_t pos = 2*(side + 1); pos < numCells - side - 1; pos++ )
 			{
-				int numNeighbors = countNeighbors( pos );
-				M[pos - side - 1] = ( numNeighbors == 3 || ( M[pos] && numNeighbors == 2 ) );
+				int numNeighbours = countNeighbours( pos );
+				M[pos - side - 1] = ( numNeighbours == 3 || ( M[pos] && numNeighbours == 2 ) );
 			}
 		}
 		

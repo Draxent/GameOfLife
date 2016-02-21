@@ -1,6 +1,6 @@
 /**
- *	@file worker.cpp
- *	@brief Implementation of \see Worker class.
+ *	@file task.h
+ *	@brief Header of \see Task_t struct.
  *	@author Federico Conte (draxent)
  *
  *	Copyright 2015 Federico Conte
@@ -18,29 +18,16 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  */
+#ifndef GAMEOFLIFE_TASK_H
+#define GAMEOFLIFE_TASK_H
 
+#include <iostream>
 
-#include "../include/worker.h"
-
-Worker::Worker( int id, Grid* g, bool vectorization )
-		: id(id), g(g), vectorization(vectorization)
+// Task message passed between \see Master and \see Worker.
+struct Task_t
 {
-	if ( this->vectorization )
-		this->numNeighbours = new int[VLEN];
-}
+	Task_t ( size_t start, size_t end) : start(start), end(end) { }
+	const size_t start, end;
+};
 
-Task_t* Worker::svc( Task_t* task )
-{
-	// The working size has to be significant in order to vectorized the thread_body function.
-	if ( this->vectorization )
-		compute_generation_vect( this->g, this->numNeighbours, task->start, task->end );
-	else
-		compute_generation( this->g, task->start, task->end );
-	return task;
-}
-
-Worker::~Worker()
-{
-	if ( this->vectorization )
-		delete[] this->numNeighbours;
-}
+#endif //GAMEOFLIFE_TASK_H

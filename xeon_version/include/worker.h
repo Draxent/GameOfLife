@@ -22,13 +22,13 @@
 #ifndef GAMEOFLIFE_WORKER_H
 #define GAMEOFLIFE_WORKER_H
 
-#include <chrono>
 #include <ff/farm.hpp>
 #include "grid.h"
-#include "specialized_functions.h"
+#include "task.h"
+#include "shared_functions.h"
 
 /// This Worker computes GOL generations until \see Master command.
-class Worker : public ff::ff_node_t<bool>
+class Worker : public ff::ff_node_t<Task_t>
 {
 public:
 	/**
@@ -37,11 +37,9 @@ public:
 	 * to store the results of the number of Neighbour counting.
 	 * @param id			Worker identifier.
 	 * @param g				shared object of the \see Grid class
-	 * @param start			row index of the starting working area.
-	 * @param end			row index of the ending working area.
 	 * @param vectorization	<code>true</code> if we want to execute the vectorized version.
 	 */
-	Worker( int id, Grid* g, size_t start, size_t end, bool vectorization);
+	Worker( int id, Grid* g, bool vectorization);
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
@@ -49,7 +47,7 @@ public:
 	 * @param task	"GO" message received from the \see Master.
 	 * @return		"DONE" message to the \see Master.
 	 */
-	bool* svc( bool* task );
+	Task_t* svc( Task_t* task );
 
 	/**
 	 * Destructor of the \see Worker class.
@@ -57,12 +55,11 @@ public:
 	 */
 	~Worker();
 
-protected:
+private:
 	int id;
 	bool vectorization;
 	Grid* g;
-	size_t start, end;
-	int* numsNeighbors;
+	int* numNeighbours;
 };
 
 #endif //GAMEOFLIFE_WORKER_H

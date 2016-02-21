@@ -29,12 +29,40 @@
 
 #include "program_options.h"
 #include "grid.h"
-#include "specialized_functions.h"
 #if DEBUG
 #include "matrix.h"
 #endif // DEBUG
 
 #define MAX_PRINTABLE_GRID 32
+
+/**
+ * Compute a generation of Game of Life.
+ * Rules for cells evolution are the following:
+ * IF ( cell is alive )
+ * 		IF ( #Neighbours < 2 )	 Cell dies due to under-population
+ * 		ELSE ( #Neighbours == 2 || #Neighbours == 3 )	Cell stays alive
+ * 		ELSE	Cell dies for starvation
+ * ELSE
+ * 		IF ( #Neighbours == 3 )	 A new cell is born by reproduction of one of the neighbour
+ * 		ELSE	Box remains empty
+ * These rules can be re-wrote as following:
+ * 	Box ← (( #Neighbours == 3 ) OR ( Cell is alive AND #Neighbours == 2 ))
+ * where the targeting box will contains or not a cell depending on the condition value.
+ *
+ * @param g					shared object of \see Grid class.
+ * @param start				row index of starting working area.
+ * @param end				row index of ending working area.
+ */
+void compute_generation( Grid* g, size_t start, size_t end );
+
+/**
+ * Vectorized version of \see compute_generation.
+ * @param g					shared object of \see Grid class.
+ * @param numNeighbours	array where to store the computed neighbours counting, used only when the function is vectorized.
+ * @param start				row index of starting working area.
+ * @param end				row index of ending working area.
+ */
+void compute_generation_vect( Grid* g, int* numNeighbours, size_t start, size_t end );
 
 /**
  * Sequential version of GOL
@@ -61,26 +89,17 @@ long end_generation( Grid* g, unsigned int current_iteration );
  * properly configure the variables: seed, width, height, iterations, nw.
  * @param argc	number of external arguments.
  * @param argv	array of external arguments.
- * @param vectorization, width, height, seed, iterations, nw	variables to configure.
+ * @param vectorization, grain, width, height, seed, iterations, nw	variables to configure.
  * @return	<code>true</code> if no error has occurred, <code>false</code> otherwise.
  */
-bool menu( int argc, char** argv, bool& vectorization, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw );
+bool menu( int argc, char** argv, bool& vectorization, size_t& grain, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw );
 
 /**
  * Initialization Phase.
- * @param vectorization, width, height, seed, iterations, nw	external variables.
- * @param g, chunk, rest, send		variables to configure.
- * @return	<code>true</code> if the result of the sequential GOL is correct, <code>false</code> otherwise.
+ * @param vectorization, width, height, seed	external variables.
+ * @param g		the \see Grid object that we want to initialize.
  */
-bool initialization( bool vectorization, size_t width, size_t height, unsigned int seed, unsigned int iterations, unsigned int nw, Grid*& g, size_t& chunk, size_t& rest, size_t& end );
-
-/**
- * Round up a number <em>numToRound</em> to a value that is multiple of <em>mul</em>.
- * @param numToRound		number to round up.
- * @param mul				<em>numToRound</em> has to be multiple of this number.
- * @return	the number rounded up.
- */
-int roundMultiple( int numToRound, int mul );
+void initialization( bool vectorization, size_t width, size_t height, unsigned int seed, Grid*& g );
 
 /**
  * Print the elapsed time in appropriate unit depending on its value or in microseconds if MACHINE_TIME flag is on.

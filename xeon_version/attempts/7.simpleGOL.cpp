@@ -41,7 +41,7 @@ int main( int argc, char* argv[] )
 		int pos_up = 1, pos_down = 2*side + 1;
 		for ( int pos = start; pos < end; pos++, pos_up++, pos_down++  )
 		{
-			int numNeighbors = MREAD[ pos_up - 1 ] +
+			int numNeighbours = MREAD[ pos_up - 1 ] +
 							   MREAD[ pos_up ] +
 							   MREAD[ pos_up + 1 ] +
 							   MREAD[ pos - 1 ] +
@@ -49,7 +49,7 @@ int main( int argc, char* argv[] )
 							   MREAD[ pos_down - 1 ] +
 							   MREAD[ pos_down ] +
 							   MREAD[ pos_down + 1 ];
-			MWRITE[pos] = ( numNeighbors == 3 || ( MREAD[pos] && numNeighbors == 2 ) );
+			MWRITE[pos] = ( numNeighbours == 3 || ( MREAD[pos] && numNeighbours == 2 ) );
 		}
 
 		// Swap
