@@ -22,6 +22,8 @@
 # VARIABLES TO SET
 WORKING_DIR=~/Project
 MIC="mic1"
+GRAIN_HOST=9000
+GRAIN_PHI=0
 
 # DERIVATE VARIABLES
 PERFORM_DIR=$WORKING_DIR/performance_comparison
@@ -31,23 +33,23 @@ DATE=$(date +%y-%m-%d)
 
 mkdir $PERFORM_DIR/$DATE
 
-TIME=$(date +%s%N | cut -b1-13)
+TIME=$(date +%s)
 
 # Compile
 $PERFORM_DIR/compile_app.sh
 
 # Low Level Threading Mechanisms
-$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "false" "false" "$DATE/perf_thread_25M.txt"
-$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "false" "false" "$DATE/perf_thread_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 $GRAIN_HOST $GRAIN_PHI "false" "false" "$DATE/perf_thread_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 $GRAIN_HOST $GRAIN_PHI "false" "false" "$DATE/perf_thread_100M.txt"
 
 # Low Level Threading Mechanisms + Vectorization
-$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "true" "false" "$DATE/perf_vect_thread_25M.txt"
-$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "true" "false" "$DATE/perf_vect_thread_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 $GRAIN_HOST $GRAIN_PHI "true" "false" "$DATE/perf_vect_thread_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 $GRAIN_HOST $GRAIN_PHI "true" "false" "$DATE/perf_vect_thread_100M.txt"
 
 # FastFlow framework
-$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "false" "true" "$DATE/perf_ff_25M.txt"
-$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "false" "true" "$DATE/perf_ff_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 $GRAIN_HOST $GRAIN_PHI "false" "true" "$DATE/perf_ff_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 $GRAIN_HOST $GRAIN_PHI "false" "true" "$DATE/perf_ff_100M.txt"
 
 # FastFlow framework + Vectorization
-$PERFORM_DIR/test_app.sh $MIC $TIME 5000 "true" "true" "$DATE/perf_vect_ff_25M.txt"
-$PERFORM_DIR/test_app.sh $MIC $TIME 10000 "true" "true" "$DATE/perf_vect_ff_100M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 5000 $GRAIN_HOST $GRAIN_PHI "true" "true" "$DATE/perf_vect_ff_25M.txt"
+$PERFORM_DIR/test_app.sh $MIC $TIME 10000 $GRAIN_HOST $GRAIN_PHI "true" "true" "$DATE/perf_vect_ff_100M.txt"

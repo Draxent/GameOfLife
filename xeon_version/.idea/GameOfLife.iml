@@ -5,25 +5,18 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main_thread.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/matrix.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main_ff.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/spinning_barrier.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/worker.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/worker_vect.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/shared_functions.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/grid.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/master.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/specialized_functions.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/grid_vect.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/program_options.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/include/worker.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/worker_vect.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/spinning_barrier.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/matrix.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/grid.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/specialized_functions.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/program_options.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/grid_vect.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/include/master.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/include/shared_functions.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/master.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/grid.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/matrix.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/program_options.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/include/task.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />

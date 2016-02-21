@@ -7,7 +7,7 @@
 #	Licensed under the Apache License, Version 2.0 (the "License");
 #	you may not use this file except in compliance with the License.
 #	You may obtain a copy of the License at
-#	
+#
 #	http://www.apache.org/licenses/LICENSE-2.0
 #
 #	Unless required by applicable law or agreed to in writing, software
@@ -17,31 +17,31 @@
 #	limitations under the License.
 # -----------------------------------------------------------------------------------
 
-#!/bin/bash
+#!/usr/bin/env bash
 
-NUMBER='^[0-9]+$'
+# VARIABLES TO SET
+WORKING_DIR=~/Project
+MIC="mic1"
+SIZE=5000
 
-if [ $# -eq 0 ]; then
-	echo "Usage: $0 num1 [nums]"
-	exit 1
-elif [ $# -eq 1 ]; then
-	echo $1;
-elif [ $# -eq 2 ]; then
-	echo $(( ($1 + $2) / 2 ))
-else
-	# The average time can be calculated for a series of numbers of length equal to or greater then 3
+# DERIVATE VARIABLES
+PERFORM_DIR=$WORKING_DIR/performance_comparison
+BUILD_DIR=$WORKING_DIR/build
 
-	# Sort Array
-	results=($@)
-	sort_results=( $(echo ${results[*]} | sed 's/ /\n/g' | sort -n) )
+DATE=$(date +%y-%m-%d)
+DIR=${DATE}_grain
 
-	# Calculate sum of all components exepts extremes
-	sum=0
-	for i in $(seq 1 $(( ${#results[@]} - 2 )) )
-	do
-		sum=$(( $sum +  ${sort_results[$i]} ))
-	done
+mkdir $PERFORM_DIR/$DIR
 
-	#`Print the average
-	echo $(( ${sum}/$((${#results[@]} - 2)) ))
-fi
+TIME=$(date +%s)
+
+# Compile
+$PERFORM_DIR/compile_app.sh
+
+# Low Level Threading Mechanisms
+$PERFORM_DIR/test_best_grain.sh "NULL" $TIME $SIZE 6000 1000 10000 8 "false" "false" "$DIR/thread_host.txt"
+$PERFORM_DIR/test_best_grain.sh $MIC $TIME $SIZE 26000 2000 34000 120 "false" "false" "$DIR/thread_phi.txt"
+
+# FastFlow framework
+$PERFORM_DIR/test_best_grain.sh "NULL" $TIME $SIZE 6000 1000 10000 8 "false" "true" "$DIR/ff_host.txt"
+$PERFORM_DIR/test_best_grain.sh $MIC $TIME $SIZE 26000 2000 34000 120 "false" "true" "$DIR/ff_phi.txt"

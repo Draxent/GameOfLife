@@ -25,25 +25,28 @@ NUMBER='^[0-9]+$'
 # VARIABLES TO SET
 WORKING_DIR=~/Project
 ITERATIONS=100
-NUM_VALUES=3
+NUM_VALUES=5
 
 # DERIVATE VARIABLES
 PERFORM_DIR=$WORKING_DIR/performance_comparison
 BUILD_DIR=$WORKING_DIR/build
 
-if [ $# -lt 6 ]; then
-	echo "Usage: $0 mic seed side vect ff output"
+if [ $# -lt 8 ]; then
+	echo "Usage: $0 mic seed side grain_host grain_phi vect ff output"
 	exit 1
 fi
 
 MIC=$1
 SEED=$2
 SIDE=$3
-VECTORIZATION=$4
-FASTFLOW_VERSION=$5
-OUTPUT_FILE=$6
+GRAIN_HOST=$4
+GRAIN_PHI=$5
+VECTORIZATION=$6
+FASTFLOW_VERSION=$7
+OUTPUT_FILE=$8
 
-echo "TEST: SEED: $SEED, SIDE: $SIDE, VECT: $VECTORIZATION, FF:$FASTFLOW_VERSION, OUTPUT_FILE:$OUTPUT_FILE."
+echo "TEST: SEED: $SEED, SIDE: $SIDE, GRAIN_HOST: $GRAIN_HOST, GRAIN_PHI: $GRAIN_PHI, VECT: $VECTORIZATION, FF:$FASTFLOW_VERSION, OUTPUT_FILE:$OUTPUT_FILE."
+echo "TEST: SEED: $SEED, SIDE: $SIDE, GRAIN_HOST: $GRAIN_HOST, GRAIN_PHI: $GRAIN_PHI, VECT: $VECTORIZATION, FF:$FASTFLOW_VERSION, OUTPUT_FILE:$OUTPUT_FILE." > $PERFORM_DIR/$OUTPUT_FILE
 
 if [ "$VECTORIZATION" = "true" ]; then VECT="-v"; fi
 if [ "$FASTFLOW_VERSION" = "true" ]; then TARGET="GOL_ff"; else TARGET="GOL_thread"; fi
@@ -51,7 +54,7 @@ if [ "$FASTFLOW_VERSION" = "true" ]; then TARGET="GOL_ff"; else TARGET="GOL_thre
 ###################################
 # perfomance program on XEON HOST #
 ###################################
-echo -e "XEON HOST" > $PERFORM_DIR/$OUTPUT_FILE
+echo -e "XEON HOST" >> $PERFORM_DIR/$OUTPUT_FILE
 echo -e "NUM THREADS\tINIT PHASE\tCOPY BORDER\tCREATING THREADS\tBARRIER PHASE\tCOMPLETE GOL" >> $PERFORM_DIR/$OUTPUT_FILE
 
 echo -n "XEON HOST Computed: "
@@ -62,7 +65,7 @@ do
 
     for j in $(seq 1 $NUM_VALUES)
     do
-        output=$($BUILD_DIR/$TARGET $VECT -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
+        output=$($BUILD_DIR/$TARGET $VECT -s $SEED -g $GRAIN_HOST -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
 
         init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
         if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError init! \033[0m"; exit 1; fi
@@ -122,7 +125,7 @@ do
 
 	for j in $(seq 1 $NUM_VALUES)
 	do
-		output=$(ssh $MIC ./$TARGET $VECT -s $SEED -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
+		output=$(ssh $MIC ./$TARGET $VECT -s $SEED -g $GRAIN_PHI -w $SIDE -h $SIDE -i $ITERATIONS -t $numthreads)
 
 		init[$j]=$(echo $output | sed 's/T/\nT/g' | grep "initialization phase" | tr -dc '0-9')
 		if ! [[ ${init[$j]} =~ $NUMBER ]]; then echo -e "\033[1;31mError XEON PHI init! \033[0m"; exit 1; fi
