@@ -58,9 +58,9 @@ void compute_generation( Grid* g, size_t start, size_t end );
 /**
  * Vectorized version of \see compute_generation.
  * @param g					shared object of \see Grid class.
- * @param numNeighbours	array where to store the computed neighbours counting, used only when the function is vectorized.
- * @param start				row index of starting working area.
- * @param end				row index of ending working area.
+ * @param numNeighbours		array where to store the computed neighbours counting, used only when the function is vectorized.
+ * @param start				index of starting working area.
+ * @param end				index of ending working area.
  */
 void compute_generation_vect( Grid* g, int* numNeighbours, size_t start, size_t end );
 

@@ -32,8 +32,35 @@
 #include "../include/matrix.h"
 #endif // DEBUG
 
+#define LOOSE_SOME_TIME 1000
+
+/**
+ * Function executed by the thread.
+ * @param id				thread identifier
+ * @param g					shared object of \see Grid class.
+ * @param vectorization		<code>true</code> if the function has to be parallelized.
+ * @param start				location address where main() stores index of starting working area.
+ * @param end				location address where main() stores index of ending working area.
+ * @param terminate			shared atomic variable used to control the thread termination.
+ * @param busy				shared atomic variable used to check if the thread is still working or assign to it work to do.
+ */
 void thread_body( int id, Grid* g, bool vectorization, size_t* start, size_t* end, std::atomic<bool>* terminate, std::atomic<bool>* busy );
+
+/**
+ * Find the first thread free ( not busy ).
+ * We remind that each thread has its own element of the busy array, shared only with main().
+ * It scan this busy array, looking for the first thread free, until it finds one.
+ * @param busy		array of atomic variables.
+ * @param nw		number of threads.
+ */
 int find_first_thread_free( std::atomic<bool>* busy, unsigned int nw );
+
+/**
+ * Wait until all threads have finish their jobs.
+ * It wait the termination of the first thread, than wait for the second, and so on.
+ * @param busy		array of atomic variables.
+ * @param nw		number of threads.
+ */
 long barrier( std::atomic<bool>* busy, unsigned int nw );
 
 int main( int argc, char** argv )
@@ -109,6 +136,7 @@ int main( int argc, char** argv )
 			starts[t] = start_chunk;
 			ends[t] = end_chunk;
 			busy[t].store( true );
+
 		}
 
 		barrier_time += barrier( busy, nw );
@@ -215,7 +243,11 @@ long barrier( std::atomic<bool>* busy, unsigned int nw )
 	for ( int i = 0; i < nw; i++ )
 	{
 		// Wait until the thread has not finish its job, i.e. is not busy anymore.
-		while ( busy[i].load() );
+		while ( busy[i].load() )
+		{
+			// Loose some time before retrying.
+			for ( volatile unsigned int j = 0; j < LOOSE_SOME_TIME; j++ );
+		}
 	}
 
 	// End - Barrier phase.
