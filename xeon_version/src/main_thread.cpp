@@ -23,12 +23,11 @@
 #include <chrono>
 #include <vector>
 #include <thread>
-#include <cmath>
 #include <atomic>
+#include <cmath>
 
 #include "../include/grid.h"
 #include "../include/shared_functions.h"
-
 #if DEBUG
 #include "../include/matrix.h"
 #endif // DEBUG
@@ -64,10 +63,11 @@ int main( int argc, char** argv )
 	// Set up some variables useful for the threads work
 	size_t workingSize = g->size() - 2*g->width() - 2;
 	size_t chunk_size = ( grain == 0 ) ? (workingSize / nw) : grain;
+	chunk_size = ( chunk_size < VLEN ) ? VLEN : chunk_size;
 	size_t start = g->width() + 1, end = g->size() - g->width() - 1;
-	long ideal_nw = (long) ceil(workingSize / chunk_size);
+	unsigned long num_tasks = ceil( workingSize / chunk_size );
 	// If the ideal number of workers is less then the required number, update nw (i.e. we do not need so many workers )
-	nw = ( ideal_nw < nw ) ? ((unsigned int) ideal_nw) : nw;
+	nw = ( num_tasks < nw ) ? ((unsigned int) num_tasks) : nw;
 
 #if DEBUG
 	std::cout << "Chunk Size: " << chunk_size << ", Start: " << start << ", End: " << end << std::endl;
