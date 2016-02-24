@@ -35,13 +35,14 @@ public:
 	/**
 	 * Initializes a new instance of \see Master class.
 	 * @param lb			load balancer used by Master.
+	 * @param nw			number of Workers to coordinate.
 	 * @param g				the \see Grid object.
 	 * @param iterations	number of GOL iterations to execute.
 	 * @param start, end	start and end indexing to the Grid working area.
 	 * @param chunk_size	chunk size to assign to Workers.
 	 * @param num_tasks		number of task that it will generate for each generation.
 	 */
-	Master( ff::ff_loadbalancer* const lb, Grid* g, unsigned int iterations, size_t start, size_t end, size_t chunk_size, unsigned long num_tasks );
+	Master( ff::ff_loadbalancer* const lb, unsigned int nw, Grid* g, unsigned int iterations, size_t start, size_t end, size_t chunk_size, unsigned long num_tasks );
 
 	/**
 	 * FastFlow method of the \see ff::ff_node_t.
@@ -59,19 +60,22 @@ public:
 	Task_t* svc( Task_t* task );
 
 private:
-	// Distribute all task, necessary to compute a generation, to all Workers.
-	void send_work();
+	// Create a new task.
+	Task_t* create_new_task();
+
+	// Send one task of the current iteration to each worker; we know that #Tasks >= #Workers.
+	void send_one_task_x_worker();
 
 	Grid* g;
 	ff::ff_loadbalancer* const lb;
-	const unsigned int iterations;
+	const unsigned int iterations, num_workers;
 	const size_t start, end, chunk_size;
 	const unsigned long num_tasks;
 	size_t start_chunk, end_chunk;
 	unsigned long counter;
 	unsigned int completed_iterations;
 	long copyborder_time, barrier_time;
-	int first_worker;
+	bool first_worker;
 	std::chrono::high_resolution_clock::time_point t1, t2;
 };
 

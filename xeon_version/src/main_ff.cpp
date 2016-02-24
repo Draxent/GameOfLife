@@ -81,7 +81,7 @@ int main( int argc, char** argv )
 	farm.remove_collector();
 
 	// The scheduler gets in input the internal load-balancer.
-	Master master( farm.getlb(), g, iterations, start, end, chunk_size, num_tasks );
+	Master master( farm.getlb(), nw, g, iterations, start, end, chunk_size, num_tasks );
 	farm.add_emitter( master );
 
 	// Adds feedback channels between each worker and the scheduler.
