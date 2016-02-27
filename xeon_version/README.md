@@ -29,8 +29,7 @@ make
 Makefile **requires** the usage of Intel proprietary compiler **icpc** and **vectorization support**, besides the variable `$FF_ROOT` has to be properly configured:
 
 ```bash
-# Pointing to the FastFlow root directory
-# ( i.e. the one containing the ff directory ).
+# Pointing to the FastFlow root directory ( i.e. the one containing the ff directory ).
 FF_ROOT = /home/spm1501/public/fastflow
 ```
 
@@ -69,8 +68,8 @@ ssh mic1 ./GOL_ff --width 5000 --height 5000 --thread 240
 
 | Option | Description |
 |:------:|:-----------|
-| –vect | activate the vectorization version |
-| –grain __NUM__ | chunk size assigned to threads <br /> ( zero for static scheduling ) |
+| --vect | activate the vectorization version |
+| --grain __NUM__ | chunk size assigned to threads <br /> ( zero for static scheduling ) |
 | --width __NUM__ | grid width |
 | --height __NUM__ | grid height |
 | --seed __NUM__ | seed used to initialize the grid <br />( zero for timestamp seed ) |
