@@ -19,28 +19,24 @@
 
 # VARIABLES
 BOOST_ROOT = /home/spm1501/public/boost_1_49_0
+INTEL_COMPILER = true
 FASTFLOW = false
 BOOST = false
 MIC = false
 DEBUG = false
 NAME = $@
-VECT = true
-INFO_VECT = false
 
-ifeq ($(VECT),true)
-	ifeq ($(INFO_VECT),true)
-		VECTORIZATION = -opt-report-phase:vec -opt-report-file=stderr -qopt-report=5
-	endif
+ifeq ($(INTEL_COMPILER),true)
+	CXX = icpc
+	ifeq ($(MIC),true)
+    	XEONPHI = -mmic -DNO_DEFAULT_MAPPING
+    endif
 else
-	VECTORIZATION = -no-vec
+	CXX = g++
 endif
 
 ifeq ($(BOOST),true)
 	BOOST_INCLUDE = -I $(BOOST_ROOT) -L $(BOOST_ROOT)/stage/lib
-endif
-
-ifeq ($(MIC),true)
-	XEONPHI = -mmic -DNO_DEFAULT_MAPPING
 endif
 
 ifeq ($(DEBUG),true)
@@ -49,10 +45,10 @@ else
         OPTFLAGS = -O3 -finline-functions -DNDEBUG
 endif
 
-CXX	= icpc $(XEONPHI) -std=c++11 $(VECTORIZATION)
-LDFLAGS = -pthread
+CXX_FLAG = -std=c++11 $(XEONPHI) $(OPTFLAGS)
+LDFLAGS  = -pthread
 
 .SUFFIXES: .cpp 
 
 $(TARGET): $(TARGET).cpp
-	$(CXX) $(BOOST_INCLUDE) $(OPTFLAGS) -o $(NAME) $< $(LDFLAGS)
+	$(CXX) $(CXX_FLAG) $(BOOST_INCLUDE) -o $(NAME) $< $(LDFLAGS)

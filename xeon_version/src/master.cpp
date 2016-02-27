@@ -22,14 +22,15 @@
 
 #include "../include/master.h"
 
-Master::Master( ff::ff_loadbalancer* const lb, unsigned int nw, Grid* g, unsigned int iterations, size_t start, size_t end, size_t chunk_size, unsigned long num_tasks )
-			: lb(lb), num_workers(nw), g(g), iterations(iterations), start(start), end(end),
-			  chunk_size(chunk_size), num_tasks(num_tasks)
+Master::Master( ff::ff_loadbalancer* const lb, unsigned int nw, Grid* g, unsigned int iterations, size_t start, size_t* chunks, unsigned int num_tasks )
+			: lb(lb), num_workers(nw), g(g), iterations(iterations), start(start),
+			  chunks(chunks), num_tasks(num_tasks)
 {
 	this->completed_iterations = 0;
 	this->start_chunk = 0;
 	this->end_chunk = start;
-	this->counter = 0;
+	this->counter_complete_tasks = 0;
+	this->counter_sent_tasks = 0;
 	this->copyborder_time = 0;
 	this->barrier_time = 0;
 	this->first_worker = true;
@@ -39,26 +40,26 @@ Task_t* Master::svc( Task_t* task )
 {
 	if ( task == nullptr )
 	{
-		// Send one task of the first iteration to each worker; we know that #Tasks >= #Workers.
-		send_one_task_x_worker();
+		send_tasks();
 		// Keep it alive.
 		return GO_ON;
 	}
 	else
 	{
-		// Increment Task counter and delete Task.
-		this->counter++;
+		// Increment the counter of complete tasks and delete the task.
+		this->counter_complete_tasks++;
 		delete( task );
 
 		// Get the worker identifier of who is responding.
 		int worker_id = lb->get_channel_id();
 
 		// If it did not complete scattering the Grid.
-		if ( this->end_chunk < this->end )
+		if ( this->counter_sent_tasks < this->num_tasks )
 		{
 			Task_t* task = create_new_task();
 			this->lb->ff_send_out_to( task, worker_id );
 		}
+#if TAKE_ALL_TIME
 		else if ( this->first_worker )
 		{
 			// When it has completed to scatter the Grid, it start counting the Barrier Phase
@@ -67,13 +68,16 @@ Task_t* Master::svc( Task_t* task )
 			t1 = std::chrono::high_resolution_clock::now();
 			this->first_worker = false;
 		}
+#endif // TAKE_ALL_TIME
 
-		// If the Task counter is equal to the number of task sent, we complete the iteration.
-		if ( this->counter == this->num_tasks )
+		// If the counter is equal to the total number of tasks, we complete the iteration.
+		if ( this->counter_complete_tasks == this->num_tasks )
 		{
+#if TAKE_ALL_TIME
 			// End - Barrier Phase
 			t2 = std::chrono::high_resolution_clock::now();
 			barrier_time += std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+#endif // TAKE_ALL_TIME
 
 			// Reset the accumulators that tracks the starting and ending point of the current chunk.
 			this->start_chunk = 0;
@@ -82,8 +86,9 @@ Task_t* Master::svc( Task_t* task )
 			// Reset the first worker variable
 			this->first_worker = true;
 
-			// Reset counter.
-			this->counter = 0;
+			// Reset counters.
+			this->counter_sent_tasks = 0;
+			this->counter_complete_tasks = 0;
 
 			// Increment the number of completed iterations.
 			this->completed_iterations++;
@@ -94,18 +99,19 @@ Task_t* Master::svc( Task_t* task )
 			// Send EOS if we completed all the iterations.
 			if ( this->completed_iterations == this->iterations )
 			{
+#if TAKE_ALL_TIME
 				// Print the total time in order to compute the end_generation functions.
 				printTime( copyborder_time, "copy border" );
 
 				// Print the total time in order to compute the barrier phase.
 				printTime( barrier_time, "barrier phase" );
+#endif // TAKE_ALL_TIME
 
 				return EOS;
 			}
 			else // We go on with the computation of the next generation.
 			{
-				// Send one task of the next iteration to each worker
-				this->send_one_task_x_worker();
+				send_tasks();
 				// Keep it alive.
 				return GO_ON;
 			}
@@ -118,7 +124,8 @@ Task_t* Master::svc( Task_t* task )
 Task_t* Master::create_new_task()
 {
 	this->start_chunk = this->end_chunk;
-	this->end_chunk = std::min( this->start_chunk + this->chunk_size, this->end );
+	this->end_chunk = this->start_chunk + this->chunks[this->counter_sent_tasks];
+	this->counter_sent_tasks++;
 	return new Task_t( this->start_chunk, this->end_chunk );
 }
 
@@ -131,4 +138,12 @@ void Master::send_one_task_x_worker()
 		// Send Task to the next Worker.
 		this->lb->ff_send_out_to( task, i );
 	}
+}
+
+void Master::send_tasks()
+{
+	send_one_task_x_worker();
+	// If we have two task per Worker, do overbooking technique.
+	if ( this->num_tasks > 2*this->num_workers )
+		send_one_task_x_worker();
 }

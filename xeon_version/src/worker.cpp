@@ -31,11 +31,15 @@ Worker::Worker( int id, Grid* g, bool vectorization )
 
 Task_t* Worker::svc( Task_t* task )
 {
+#if VECTORIZATION
 	// The working size has to be significant in order to vectorized the thread_body function.
 	if ( this->vectorization )
 		compute_generation_vect( this->g, this->numNeighbours, task->start, task->end );
 	else
 		compute_generation( this->g, task->start, task->end );
+#else
+	compute_generation( this->g, task->start, task->end );
+#endif // VECTORIZATION
 	return task;
 }
 

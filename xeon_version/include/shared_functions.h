@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <chrono>
 #include <string>
+#include <cmath>
 
 #include "program_options.h"
 #include "grid.h"
@@ -34,6 +35,12 @@
 #endif // DEBUG
 
 #define MAX_PRINTABLE_GRID 32
+#define MIN_BLOCK_SIZE 1024
+
+inline unsigned long long pow3( unsigned long long x )
+{
+	return x*x*x;
+}
 
 /**
  * Compute a generation of Game of Life.
@@ -55,6 +62,7 @@
  */
 void compute_generation( Grid* g, size_t start, size_t end );
 
+#if VECTORIZATION
 /**
  * Vectorized version of \see compute_generation.
  * @param g					shared object of \see Grid class.
@@ -63,6 +71,7 @@ void compute_generation( Grid* g, size_t start, size_t end );
  * @param end				index of ending working area.
  */
 void compute_generation_vect( Grid* g, int* numNeighbours, size_t start, size_t end );
+#endif // VECTORIZATION
 
 /**
  * Sequential version of GOL
@@ -86,13 +95,13 @@ long end_generation( Grid* g, unsigned int current_iteration );
 
 /**
  * Shows the program options if flag "--help" is present and
- * properly configure the variables: seed, width, height, iterations, nw.
+ * properly configure the variables: vectorization, num_chunks, width, height, seed, iterations, nw.
  * @param argc	number of external arguments.
  * @param argv	array of external arguments.
- * @param vectorization, grain, width, height, seed, iterations, nw	variables to configure.
+ * @param vectorization, num_chunks, width, height, seed, iterations, nw	variables to configure.
  * @return	<code>true</code> if no error has occurred, <code>false</code> otherwise.
  */
-bool menu( int argc, char** argv, bool& vectorization, size_t& grain, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw );
+bool menu( int argc, char** argv, bool& vectorization, unsigned int& num_chunks, size_t& width, size_t& height, unsigned int& seed, unsigned int& iterations, unsigned int& nw );
 
 /**
  * Initialization Phase.
@@ -100,6 +109,14 @@ bool menu( int argc, char** argv, bool& vectorization, size_t& grain, size_t& wi
  * @param g		the \see Grid object that we want to initialize.
  */
 void initialization( bool vectorization, size_t width, size_t height, unsigned int seed, Grid*& g );
+
+
+/**
+ * Set up some variables useful for the threads work.
+ * @param g		the \see Grid object.
+ * @param num_tasks, nw, start, chunks		variables to configure.
+ */
+void setup_working_variable(  Grid* g, unsigned int& num_tasks, unsigned int& nw, size_t& start, size_t*& chunks );
 
 /**
  * Print the elapsed time in appropriate unit depending on its value or in microseconds if MACHINE_TIME flag is on.

@@ -61,12 +61,14 @@ public:
 	 */
 	void init( unsigned int seed );
 
+#if VECTORIZATION
 	/**
 	 * Set up this grid using random values.
 	 * Vectorization version of \see init function.
 	 * @param seed				seed used to initialize the grid.
 	 */
 	void init_vect( unsigned int seed );
+#endif // VECTORIZATION
 
 	/**
 	 * Return the actual grid width.
@@ -119,6 +121,7 @@ public:
 				this->Read[ pos_bottom + 1 ];
 	}
 
+#if VECTORIZATION
 	/**
 	 * Count the number of neighbours (the 8 adjacent boxes) of a box grid set to <code>true</code>.
 	 * Vectorization version of \see countNeighbours function.
@@ -139,6 +142,7 @@ public:
 				this->Read[ pos_bottom ] +
 				this->Read[ pos_bottom + 1 ];
 	}
+#endif // VECTORIZATION
 
 	/**
 	 * Print the boolean matrix on the standard output.

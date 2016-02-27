@@ -18,9 +18,26 @@
 # -----------------------------------------------------------------------------------
 
 # Control Variables
+INTEL_COMPILER = true
 MIC = false
 DEBUG = false
 MACHINE_TIME = false
+TAKE_ALL_TIME = true
+
+# Pointing to the FastFlow root directory (i.e. the one containing the ff directory).
+FF_ROOT 	= /home/spm1501/public/fastflow
+#~/fastflow
+#/home/spm1501/public/fastflow
+
+ifeq ($(INTEL_COMPILER),true)
+	CXX = icpc -D VECTORIZATION
+	 #-ipo
+	ifeq ($(MIC),true)
+    	XEONPHI = -mmic -D MIC -DNO_DEFAULT_MAPPING
+    endif
+else
+	CXX = g++
+endif
 
 ifeq ($(DEBUG),true)
 	OPTFLAGS = -g -D DEBUG
@@ -28,53 +45,47 @@ else
 	ifeq ($(MACHINE_TIME),true)
 		MACHINE_FLAG = -D MACHINE_TIME
 	endif
-	OPTFLAGS = -O3 -finline-functions -DNDEBUG -ipo $(MACHINE_FLAG)
-endif
-
-ifeq ($(MIC),true)
-	XEONPHI = -mmic -D MIC -DNO_DEFAULT_MAPPING
+	OPTFLAGS = # -O3 -finline-functions -DNDEBUG $(MACHINE_FLAG)
 endif
 
 # Compiler & Libs
-CXX 		= icpc -std=c++11 $(XEONPHI) $(OPTFLAGS)
+CXX_FLAGS	= -std=c++11 $(XEONPHI) $(OPTFLAGS)
 LDFLAGS 	= -pthread
-# Pointing to the FastFlow root directory (i.e. the one containing the ff directory).
-FF_ROOT 	= /home/spm1501/public/fastflow
 
 .PHONY: all clean clean_thread clean_ff cleanall
 
 all: build/GOL_thread build/GOL_ff
 
 build/GOL_thread: src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/matrix.o
-	$(CXX) src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/matrix.o -o $@ $(LDFLAGS)
+	$(CXX) $(CXX_FLAGS) src/main_thread.cpp build/grid.o build/program_options.o build/shared_functions.o build/matrix.o -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
 build/GOL_ff: src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/master.o build/worker.o build/matrix.o
-	$(CXX) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/master.o build/worker.o build/matrix.o include/task.h -o $@ $(LDFLAGS)
+	$(CXX) $(CXX_FLAGS) -I $(FF_ROOT) src/main_ff.cpp build/grid.o build/program_options.o build/shared_functions.o build/master.o build/worker.o build/matrix.o include/task.h -o $@ $(LDFLAGS)
 	@echo "Compiled $@ successfully!"
 
 build/grid.o : src/grid.cpp include/grid.h
-	$(CXX) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 build/master.o : src/master.cpp include/master.h
-	$(CXX) -I $(FF_ROOT) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -I $(FF_ROOT) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 build/matrix.o : src/matrix.cpp include/matrix.h
-	$(CXX) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 build/program_options.o : src/program_options.cpp include/program_options.h
-	$(CXX) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 build/shared_functions.o : src/shared_functions.cpp include/shared_functions.h
-	$(CXX) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 build/worker.o : src/worker.cpp include/worker.h
-	$(CXX) -I $(FF_ROOT) -c $< -o $@
+	$(CXX) $(CXX_FLAGS) -I $(FF_ROOT) -c $< -o $@
 	@echo "Compiled $< successfully!"
 
 clean_thread:

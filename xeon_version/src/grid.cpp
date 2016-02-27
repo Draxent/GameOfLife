@@ -45,6 +45,7 @@ void Grid::init( unsigned int seed )
 		this->Read[i] = (rand() > RAND_MAX_HALF);
 }
 
+#if VECTORIZATION
 void Grid::init_vect( unsigned int seed )
 {
 	// Initialize random seed
@@ -58,7 +59,7 @@ void Grid::init_vect( unsigned int seed )
 	for ( ; i < this->numCells; i++)
 		this->Read[i] = ( drand48() > 0.5 );
 }
-
+#endif // VECTORIZATION
 
 size_t Grid::width() const
 {

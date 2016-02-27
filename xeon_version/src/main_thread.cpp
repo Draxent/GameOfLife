@@ -24,7 +24,6 @@
 #include <vector>
 #include <thread>
 #include <atomic>
-#include <cmath>
 
 #include "../include/grid.h"
 #include "../include/shared_functions.h"
@@ -67,11 +66,11 @@ int main( int argc, char** argv )
 {
 	std::chrono::high_resolution_clock::time_point t1, t2;
 	bool vectorization;
-	size_t grain, width, height;
-	unsigned int seed, iterations, nw;
+	size_t width, height;
+	unsigned int seed, iterations, nw, num_tasks;
 	Grid* g;
 	// Configure the variables depending on the program options.
-	if ( !menu( argc, argv, vectorization, grain, width, height, seed, iterations, nw ) )
+	if ( !menu( argc, argv, vectorization, num_tasks, width, height, seed, iterations, nw ) )
 		return 1;
 	initialization( vectorization, width, height, seed, g );
 
@@ -87,18 +86,9 @@ int main( int argc, char** argv )
 	// Start - Game of Life & Start Creating Threads
 	t1 = std::chrono::high_resolution_clock::now();
 
-	// Set up some variables useful for the threads work
-	size_t workingSize = g->size() - 2*g->width() - 2;
-	size_t chunk_size = ( grain == 0 ) ? (workingSize / nw) : grain;
-	chunk_size = ( chunk_size < VLEN ) ? VLEN : chunk_size;
-	size_t start = g->width() + 1, end = g->size() - g->width() - 1;
-	unsigned long num_tasks = ceil( workingSize / chunk_size );
-	// If the ideal number of workers is less then the required number, update nw (i.e. we do not need so many workers )
-	nw = ( num_tasks < nw ) ? ((unsigned int) num_tasks) : nw;
-
-#if DEBUG
-	std::cout << "Chunk Size: " << chunk_size << ", Start: " << start << ", End: " << end << std::endl;
-#endif // DEBUG
+	size_t start;
+	size_t* chunks;
+	setup_working_variable( g, num_tasks, nw, start, chunks );
 
 	// If busy[i] is true, means that the i-th thread has received a task or is still computing its task.
 	std::atomic<bool>* busy = new std::atomic<bool>[nw];
@@ -126,17 +116,18 @@ int main( int argc, char** argv )
 	long copyborder_time = 0, barrier_time = 0;
 	for ( unsigned int k = 1; k <= iterations; k++ )
 	{
+		unsigned int counter_sent_tasks = 0;
 		size_t start_chunk, end_chunk = start;
 
-		while ( end_chunk < end )
+		while ( counter_sent_tasks < num_tasks )
 		{
 			int t = find_first_thread_free( busy, nw );
 			start_chunk = end_chunk;
-			end_chunk = std::min( start_chunk + chunk_size, end );
+			end_chunk = start_chunk + chunks[counter_sent_tasks];
+			counter_sent_tasks++;
 			starts[t] = start_chunk;
 			ends[t] = end_chunk;
 			busy[t].store( true );
-
 		}
 
 		barrier_time += barrier( busy, nw );
@@ -150,12 +141,15 @@ int main( int argc, char** argv )
 	// Await the threads termination.
 	for ( int t = 0; t < nw; t++ )
 		tid[t].join();
+	delete[] chunks;
 
+#if TAKE_ALL_TIME
 	// Print the total time in order to compute the end_generation functions.
 	printTime( copyborder_time, "copy border" );
 
 	// Print the total time in order to compute the barrier phase.
 	printTime( barrier_time, "barrier phase" );
+#endif // TAKE_ALL_TIME
 
 	// End - Game of Life
 	t2 = std::chrono::high_resolution_clock::now();
@@ -197,11 +191,15 @@ void thread_body( int id, Grid* g, bool vectorization, size_t* start, size_t* en
 		// If does not have to terminate, it executes its job.
 		if ( !terminate->load() )
 		{
+#if VECTORIZATION
 			// Execute the job on the assigned chunk.
 			if ( vectorization )
 				compute_generation_vect( g, numNeighbours, *start, *end );
 			else
 				compute_generation( g, *start, *end );
+#else
+			compute_generation( g, *start, *end );
+#endif // VECTORIZATION
 
 			// Signal that now is free.
 			busy->store( false );
@@ -234,10 +232,11 @@ int find_first_thread_free( std::atomic<bool>* busy, unsigned int nw )
 
 long barrier( std::atomic<bool>* busy, unsigned int nw )
 {
+#if TAKE_ALL_TIME
 	std::chrono::high_resolution_clock::time_point t1, t2;
-
 	// Start - Barrier phase.
 	t1 = std::chrono::high_resolution_clock::now();
+#endif // TAKE_ALL_TIME
 
 	// Scan all threads sequentially and wait that all finish their jobs.
 	for ( int i = 0; i < nw; i++ )
@@ -250,7 +249,11 @@ long barrier( std::atomic<bool>* busy, unsigned int nw )
 		}
 	}
 
+#if TAKE_ALL_TIME
 	// End - Barrier phase.
 	t2 = std::chrono::high_resolution_clock::now();
 	return std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+#else
+	return 0;
+#endif // TAKE_ALL_TIME
 }
